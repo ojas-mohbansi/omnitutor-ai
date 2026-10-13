@@ -145,9 +145,6 @@ P(L_{t+1})=P(L_t\mid O_t)+(1-P(L_t\mid O_t))P(T)
 
 These are standard candidate equations, not calibrated parameters. Tune parameters only on representative data; otherwise label them provisional. Consider question difficulty and guessing behavior in later model iterations.
 
-### Spaced repetition
-A free/open-source FSRS implementation may be integrated behind an adapter after license and runtime review. Store review outcomes and scheduler state separately from BKT mastery. The two concepts are related but not interchangeable. Pin the actual library version and use its documented equations rather than copying a stale formula.
-
 ## 8. Evaluation requirements
 
 Evaluate:

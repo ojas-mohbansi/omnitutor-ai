@@ -11,7 +11,6 @@
 - **pgvector:** PostgreSQL extension for vector similarity search.
 - **Full-text search:** PostgreSQL lexical search using `tsvector`/`tsquery`.
 - **BKT:** Bayesian Knowledge Tracing, a probabilistic skill/mastery model.
-- **FSRS:** Free Spaced Repetition Scheduler.
 - **ASR/TTS:** Automatic speech recognition / text-to-speech.
 - **WER/CER:** Word/character error rate for speech transcription.
 - **RRF:** Reciprocal-rank fusion for combining ranked retrieval lists.
@@ -36,7 +35,7 @@
 
 ## ADR: Audio is core
 
-**Decision:** Audio tutoring is a required product feature, despite being an optional enhancement in the challenge brief.  
+**Decision:** Audio tutoring is a required product feature.  
 **Consequence:** Speech input, spoken output, transcripts, citation display, error handling, and audio evaluation are part of acceptance criteria.
 
 ## ADR: Free/FOSS-first

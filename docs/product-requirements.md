@@ -41,10 +41,6 @@ Students work across disconnected textbooks, slides, figures, and lecture record
 
 RAG is not a plug-in enhancement. The grounding score is 20% of the hackathon evaluation, and reliable source-linked answers and refusals depend on retrieval. All course-grounded answers must pass through the retrieval and evidence-sufficiency path. If retrieval fails, the model must not silently fall back to uncited course claims.
 
-## Required versus challenge-optional features
-
-The challenge brief lists a visual course map, targeted revision packages, study scheduling, mixed-language interaction, and audio tutoring as optional enhancements. OmniTutor AI explicitly promotes audio tutoring to a core requirement. The team may also implement the other enhancements, but they must not displace the grounding, assessment, learner-model, and evaluation requirements.
-
 ## Non-functional requirements
 
 - Preserve provenance through every processing stage.

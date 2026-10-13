@@ -304,7 +304,7 @@ ORDER BY rank DESC
 LIMIT $3;
 ```
 
-The SQL assumes `embedding` and `search_vector` columns/indexes are added by SQL migrations. Use parameterized SQL and enforce course access before retrieval. Consider multilingual text search configuration for mixed-language materials.
+The SQL assumes `embedding` and `search_vector` columns/indexes are added by SQL migrations. Use parameterized SQL and enforce course access before retrieval.
 
 ## Lean indexing strategy
 
