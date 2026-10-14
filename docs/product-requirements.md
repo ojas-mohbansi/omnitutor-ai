@@ -1,5 +1,12 @@
 # Product Requirements — OmniTutor AI
 
+> **Status: early design proposal, not the implemented system (audited 2026-10-14).**
+> This note predates the build and describes options that were **not** adopted, e.g. pgvector,
+> PostgreSQL full-text/hybrid search and per-course authorization. The implemented architecture is
+> [ARCHITECTURE.md](ARCHITECTURE.md) (deviations from the plan: its §0) and the API is [API_SPEC.md](API_SPEC.md).
+> Kept for reference only.
+
+
 ## Product summary
 
 OmniTutor AI is a multimodal study companion that combines course materials and learner state to provide trustworthy, adaptive tutoring. Retrieval-augmented generation (RAG) is mandatory: every answer about uploaded course content must be grounded in retrieved PostgreSQL records or clearly flagged as unsupported.

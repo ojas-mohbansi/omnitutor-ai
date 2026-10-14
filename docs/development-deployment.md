@@ -1,5 +1,12 @@
 # Development and Deployment
 
+> **Status: early design proposal, not the implemented system (audited 2026-10-14).**
+> This note predates the build and describes options that were **not** adopted, e.g. pgvector,
+> PostgreSQL full-text/hybrid search and per-course authorization. The implemented architecture is
+> [ARCHITECTURE.md](ARCHITECTURE.md) (deviations from the plan: its §0) and the API is [API_SPEC.md](API_SPEC.md).
+> Kept for reference only.
+
+
 ## Free/FOSS-first baseline
 
 The app should not require paid APIs. Use local/self-hosted services and open-source software where feasible. “Free” does not automatically mean open source; check the license of each model, model weights, dependency, and dataset.

@@ -1,0 +1,16 @@
+{
+  "description": "Ground truth for Module 5 (PDF ingestion) on the real Stage-1 PDF. Each pattern is a case-insensitive regex that must match the extracted chunk text (title + content) of that page. Written by reading every page; see data/demo/README.md.",
+  "file": "data/demo/pdf/process-scheduling-9pages.pdf",
+  "sha256": "5ab4264dfd1eab2c0550dbf1a0ed43a10d1c779d2380e423004c42379ba664d2",
+  "pages": {
+    "1": { "mustMatch": ["process scheduling"] },
+    "2": { "mustMatch": ["multi-?\\s?programm", "cpu utili[sz]ation", "switching the cpu"] },
+    "3": { "mustMatch": ["cpu burst", "i/o (burst|wait)", "i/o[- ]bound", "cpu[- ]bound", "frequency|histogram|graph", "burst duration"], "figure": true },
+    "4": { "mustMatch": ["i/o[- ]bound", "word processor", "cpu[- ]bound", "gcc|scientific|3d rendering", "priorit"], "imageOnly": true },
+    "5": { "mustMatch": ["\\bnew\\b", "\\bready\\b", "\\brunning\\b", "\\bwaiting\\b", "terminated", "admitted", "interrupt", "scheduler dispatch", "i/o or event wait", "i/o or event completion", "\\bexit\\b"], "figure": true },
+    "6": { "mustMatch": ["dispatcher", "short-term scheduler", "context", "user mode", "dispatch latency"] },
+    "7": { "mustMatch": ["cpu utili[sz]ation", "throughput", "turn ?around time", "response time", "waiting time", "ready queue"] },
+    "8": { "mustMatch": ["burst time\\s*\\+\\s*waiting time", "turn ?around time\\s*[-–−]\\s*burst time", "arrival time"] },
+    "9": { "mustMatch": ["round robin", "(time slice|quantum)[^0-9]{0,20}2", "7\\.75", "context switch", "\\bP1\\b", "\\bP4\\b", "average response time"], "figure": true, "imageOnly": true }
+  }
+}

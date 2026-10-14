@@ -1,0 +1,325 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Local typefaces
+   ==========================================================================
+
+   Fraunces, Instrument Sans and JetBrains Mono are vendored as variable
+   WOFF2 files under `public/fonts` and referenced by the `@font-face` rules
+   below. Each family ships latin and latin-ext subsets with the unicode-range
+   split Google's API uses, so the browser only fetches what the page needs.
+
+   The SIL Open Font License text for every family sits in
+   `public/fonts/licenses`. Nothing here reaches a font CDN at build time or
+   at runtime, which is why the family variables are declared in plain CSS
+   rather than injected by next/font.
+   ========================================================================== */
+
+/* Fraunces (normal, latin-ext) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Fraunces (normal, latin) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Instrument Sans (normal, latin-ext) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/instrument-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Instrument Sans (normal, latin) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/instrument-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Instrument Sans (italic, latin-ext) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/instrument-sans-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Instrument Sans (italic, latin) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/instrument-sans-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* JetBrains Mono (normal, latin-ext) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* JetBrains Mono (normal, latin) - SIL Open Font License 1.1 */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --font-fraunces: "Fraunces", ui-serif, Georgia, serif;
+  --font-instrument: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+/* ==========================================================================
+   The Citation Ledger — design tokens
+   ==========================================================================
+
+   The interface is a scholarly apparatus: the app's signature move is that
+   every claim proves its source, so the surface borrows the grammar of an
+   annotated critical edition — cool bone stock, hairline rules, a locator rail
+   and marginalia — rather than the default rounded-card SaaS kit.
+
+   Colour is a scarce resource here. The substrate is deliberately cool-neutral
+   (not the ubiquitous warm cream) and the three signal colours carry meaning
+   only: proof, verified, pending. Nothing is tinted for decoration.
+
+   MEASURED CONTRAST (WCAG 2.2, sRGB relative luminance, on #F1F1ED unless
+   stated). All ratios below were computed, not estimated; re-run the check in
+   the plan's verification step if any value changes.
+
+     ink            #16181C on paper             15.7:1   AAA  normal text
+     ink            #16181C on surface           17.0:1   AAA  normal text
+     graphite       #5C636B on paper              5.4:1   AA   normal text
+     proof          #C8341C on paper              4.7:1   AA   normal text
+     proof          #C8341C on surface            5.1:1   AA   normal text
+     verified       #2F6B4F on paper              5.6:1   AA   normal text
+     pending        #7E5F12 on paper              5.3:1   AA   normal text
+     proof-ink      #9F2F1D on proof-ground       6.2:1   AAA  normal text
+     verified-ink   #2C5B44 on verified-ground    6.7:1   AAA  normal text
+     pending-ink    #7A5D13 on pending-ground     5.4:1   AA   normal text
+     workspace-ink  #EDEDE9 on workspace         14.4:1   AAA  normal text
+     workspace-muted #9AA0A7 on workspace          6.4:1   AA   normal text
+
+   NON-TEXT BOUNDARIES: `rule` (12% ink) measures 1.3:1 and `rule-strong` (24%
+   ink) measures 1.7:1 against paper. Both are decorative separators and are
+   intentionally below the 3:1 that WCAG 1.4.11 requires of a boundary whose
+   only job is to identify a control. Never use a hairline as the sole visual
+   indicator of a control edge, focus state or status — focus rings use `proof`
+   (4.7:1) and status is carried by word plus colour, never colour alone.
+   ========================================================================== */
+
+@theme {
+  /* --- Reading-room substrate ------------------------------------------- */
+  --color-paper: #f1f1ed;
+  --color-surface: #fafaf7;
+  --color-ink: #16181c;
+  --color-graphite: #5c636b;
+  --color-rule: rgb(22 24 28 / 0.12);
+  --color-rule-strong: rgb(22 24 28 / 0.24);
+
+  /* --- Signal: meaning only, never decoration --------------------------- */
+  --color-proof: #c8341c;
+  --color-verified: #2f6b4f;
+  --color-pending: #7e5f12;
+
+  /* --- Signal grounds for tags and badges ------------------------------- */
+  --color-proof-ground: #fbe9e4;
+  --color-proof-ink: #9f2f1d;
+  --color-verified-ground: #e7f0e9;
+  --color-verified-ink: #2c5b44;
+  --color-pending-ground: #f7f0da;
+  --color-pending-ink: #7a5d13;
+
+  /* --- Dark workspace: the tutor and the source viewers ----------------- */
+  --color-workspace: #1a1d21;
+  --color-workspace-raised: #23272c;
+  --color-workspace-rule: rgb(255 255 255 / 0.1);
+  --color-workspace-ink: #edede9;
+  --color-workspace-muted: #9aa0a7;
+
+  /* --- Type scale (fluid where it needs to be) -------------------------- */
+  --text-folio: clamp(3.25rem, 8vw, 6.75rem);
+  --text-folio--line-height: 0.94;
+  --text-folio--letter-spacing: -0.03em;
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.25;
+  --text-body: 1rem;
+  --text-body--line-height: 1.62;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.45;
+  --text-locator: 0.75rem;
+  --text-locator--line-height: 1.2;
+  --text-locator--letter-spacing: 0.02em;
+
+  /* --- Radii: small and consistent by hierarchy ------------------------- */
+  --radius-hair: 2px;
+  --radius-card: 4px;
+  --radius-panel: 6px;
+
+  /* --- Motion: real mass, never linear or ease-in-out ------------------- */
+  --ease-ledger: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* The three local families are mapped onto the utility names. `inline` keeps
+   the var() reference in the generated utility instead of copying the resolved
+   value, so a family can be swapped in one place. */
+@theme inline {
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-instrument);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Tailwind 4 resets buttons to the default cursor; controls must look and feel clickable. */
+  button:not(:disabled),
+  [role="button"],
+  select,
+  summary,
+  label:has(> input[type="checkbox"], > input[type="radio"]) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  /* Immediate press feedback, even before a slow request answers. */
+  button:not(:disabled):active,
+  a[href]:active {
+    transform: translateY(1px) scale(0.985);
+  }
+  button,
+  a[href] {
+    transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+    transition-duration: 150ms;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-proof);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active,
+    a[href]:active {
+      transform: none;
+    }
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fraunces carries the display voice only. Body copy stays on Instrument
+     Sans so the serif reads as intent rather than as a house style. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* Both checks, not one: proof is 4.7:1 on paper and 5.1:1 on surface, so the
+     ring clears 3:1 everywhere it can land (WCAG 1.4.11, 2.4.11). */
+  :focus-visible {
+    outline: 2px solid var(--color-proof);
+    outline-offset: 2px;
+  }
+
+  /* Sticky headers must not swallow the element the keyboard just focused. */
+  :target,
+  :focus {
+    scroll-margin-top: 5rem;
+  }
+
+  ::selection {
+    background-color: var(--color-proof-ground);
+    color: var(--color-proof-ink);
+  }
+}
+
+/* Mono is reserved for locators and machine numbers, where it encodes
+   provenance (p. 71 / s. 14 / 06:42) rather than decorating a label. Tabular
+   figures keep a column of locators from jittering. */
+@utility locator {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: var(--text-locator);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Prose measure: under 80 characters, per The Elements of Typographic Style. */
+@utility measure {
+  max-width: 68ch;
+}
+
+/* The engineering-notebook substrate: a 24px graphite grid at 3.5% opacity.
+   Fixed and pointer-events-none so it never repaints with scroll content. */
+@utility substrate {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgb(22 24 28 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(22 24 28 / 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Vestibular safety: one global kill-switch. GSAP's matchMedia guard in
+   lib/motion.ts disables scroll pinning in the same condition, so this is the
+   CSS half of the reduced-motion contract, not the whole of it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

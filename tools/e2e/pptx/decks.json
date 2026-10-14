@@ -1,0 +1,75 @@
+{
+  "description": "Ground truth for Module 6 (PPTX ingestion), written BEFORE the first ingestion. Slide text facts come from the slide XML (read independently; every text run was checked to reach the parser output). Figure facts were written by viewing each picture the parser sends (VM slides 21, 34, 37; Lab2 slide 4). Decorative slides: their only pictures carry no information (VM slide 40: celebration illustration). Regexes are case-insensitive and must match the slide's chunk (title + content). Each deck gets its own course.",
+  "sources": [
+    {
+      "kind": "PPTX",
+      "label": "REAL: OS Module 5 lecture deck (Virtual Memory + File Management), 40 slides, 8 pictures on 5 slides, no title placeholders, shape-drawn diagrams",
+      "courseId": "pptx-vm",
+      "courseName": "Operating Systems: Virtual Memory and File Management",
+      "file": "data/demo/pptx/os-module5-virtual-memory.pptx",
+      "filename": "os-module5-virtual-memory.pptx",
+      "sha256": "8ab5040b010963e9b1f8378fc4507d1a57690b1cc73596b0fd652317ff5f371b",
+      "expectChunks": 40,
+      "titles": { "1": "Virtual Memory Management and File Handling", "19": "File Handling in Operating System", "21": "Disk Structure", "34": "File Directory Structure", "37": "Directory Implementation" },
+      "slides": {
+        "19": ["non volatile memories"],
+        "21": ["spindle", "platter", "actuator", "read\\s*/\\s*write head", "track", "sector"],
+        "34": ["partition", "metadata", "directory entry", "attr"],
+        "37": ["searching for a unique name", "file name 1", "pointers? to (the )?data blocks"]
+      },
+      "decorative": [40],
+      "questions": [
+        { "q": "What are the main parts of a hard disk drive?", "slide": 21 },
+        { "q": "How are directories and files laid out across partitions?", "slide": 34 },
+        { "q": "Why is a linear list slow for implementing a directory?", "slide": 37 },
+        { "q": "What happens when a requested page is not in main memory?", "slide": 10 }
+      ],
+      "offMaterial": ["What is round robin scheduling?", "Explain the producer-consumer problem."]
+    },
+    {
+      "kind": "PPTX",
+      "label": "REAL: OS lab deck (Unix file system calls), 24 slides, code-heavy, 1 picture (slide 4 is title + picture only)",
+      "courseId": "pptx-lab2",
+      "courseName": "Operating Systems Lab: File System Calls",
+      "file": "data/demo/pptx/lab2-file-system-calls.pptx",
+      "filename": "lab2-file-system-calls.pptx",
+      "sha256": "cc1bc21fa05f05a8e4ec8456930e9c0631fbfd33052d518ab7eba53c72bbd811",
+      "expectChunks": 24,
+      "titles": { "2": "OPEN system call", "4": "Different flags values", "9": "lseek() system call" },
+      "slides": {
+        "2": ["returns an integer called file descriptor"],
+        "4": ["O_RDONLY[^\\n]{0,80}read only", "O_WRONLY[^\\n]{0,80}write only", "O_RDWR[^\\n]{0,80}read and write", "O_NONBLOCK[^\\n]{0,80}block", "O_APPEND[^\\n]{0,80}append", "O_CREAT[^\\n]{0,80}create", "O_TRUNC[^\\n]{0,80}truncate", "O_EXCL[^\\n]{0,80}(error|exist)"],
+        "9": ["seek_cur\\s*[–-]\\s*offset is relative to the current position"]
+      },
+      "decorative": [],
+      "questions": [
+        { "q": "What does the O_TRUNC flag do?", "slide": 4 },
+        { "q": "How do I move the file offset relative to the end of the file?", "slide": 9 },
+        { "q": "What does open() return?", "slide": 2 }
+      ],
+      "offMaterial": ["What is virtual memory?", "How does round robin scheduling work?"]
+    },
+    {
+      "kind": "PPTX",
+      "label": "GENERATED (Stage-1 package, paraphrases the PDF): 10 slides, text only",
+      "courseId": "pptx-generated",
+      "courseName": "Operating Systems: CPU Scheduling",
+      "file": "data/demo/slides/process-scheduling-10slides.pptx",
+      "filename": "process-scheduling-10slides.pptx",
+      "sha256": "7452cbfd0048f8be9f3675886da2646348cd33dc515ba0499dd94e372932954c",
+      "expectChunks": 10,
+      "titles": { "1": "Process Scheduling", "6": "The Dispatcher", "7": "Dispatch Latency", "9": "Performance Metrics" },
+      "slides": {
+        "7": ["dispatch latency is the time"],
+        "8": ["cpu utilization: keep the cpu busy"],
+        "9": ["response time = first cpu start time"]
+      },
+      "decorative": [],
+      "questions": [
+        { "q": "What is dispatch latency?", "slide": 7 },
+        { "q": "How do you calculate response time?", "slide": 9 }
+      ],
+      "offMaterial": ["What is a page fault?"]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "description": "Acceptance criteria for Module 9 (course build), written BEFORE the build code existed or ran. Topic text = name + description (case-insensitive regexes). mustCover: concepts the material teaches (each must appear in >= 1 topic). mustNotCover: concepts the material does NOT contain (verified by grep over the chunks); a topic about them would be invented. tagging: chunks at these locations must be assigned to a topic whose text matches the regex (pass: >= 80% of listed chunks). rrTopic/after: the topic matching `topic` must have >= 1 prerequisite and come after the topic matching `after` (basics before algorithms).",
+  "courses": [
+    {
+      "courseId": "demo-course",
+      "topicCount": [5, 8],
+      "mustCover": ["burst", "\\bstates?\\b", "dispatch", "turnaround|waiting time|criteria|metric", "round robin|time slice|quantum", "preempt"],
+      "mustNotCover": ["deadlock", "paging|page fault|virtual memory", "semaphore|synchroni[sz]ation", "first[- ]come|\\bfcfs\\b", "shortest[- ]job|\\bsjf\\b", "multilevel", "priority scheduling"],
+      "tagging": [
+        { "sourceType": "PDF", "page": 3, "topic": "burst" },
+        { "sourceType": "PDF", "page": 4, "topic": "bound|burst|types? of process" },
+        { "sourceType": "PDF", "page": 5, "topic": "\\bstates?\\b" },
+        { "sourceType": "PDF", "page": 6, "topic": "dispatch" },
+        { "sourceType": "PDF", "page": 7, "topic": "criteria|metric|turnaround|waiting|response time|throughput" },
+        { "sourceType": "PDF", "page": 8, "topic": "criteria|metric|turnaround|waiting|response time|throughput" },
+        { "sourceType": "PDF", "page": 9, "topic": "round robin|time slice|quantum" },
+        { "sourceType": "VIDEO", "tStart": 46.3, "tEnd": 75.2, "topic": "preempt|principle|how scheduling works|scheduling (concept|basic|fundamental)" }
+      ],
+      "order": { "topic": "round robin|time slice|quantum", "after": "\\bstates?\\b" }
+    },
+    {
+      "courseId": "pptx-vm",
+      "topicCount": [5, 8],
+      "mustCover": ["virtual memory", "page fault|demand paging", "replacement|\\bfifo\\b|\\blru\\b|optimal", "allocation", "free[- ]space|bit ?(map|vector)", "director"],
+      "mustNotCover": ["deadlock", "cpu scheduling|round robin", "semaphore", "process synchroni[sz]ation"],
+      "tagging": [
+        { "sourceType": "PPTX", "slide": 3, "topic": "virtual memory" },
+        { "sourceType": "PPTX", "slide": 10, "topic": "page fault|demand paging|virtual memory" },
+        { "sourceType": "PPTX", "slide": 12, "topic": "replacement|\\bfifo\\b|\\blru\\b|optimal" },
+        { "sourceType": "PPTX", "slide": 17, "topic": "replacement|\\bfifo\\b|\\blru\\b|optimal" },
+        { "sourceType": "PPTX", "slide": 18, "topic": "replacement|\\bfifo\\b|\\blru\\b|optimal" },
+        { "sourceType": "PPTX", "slide": 22, "topic": "allocation" },
+        { "sourceType": "PPTX", "slide": 26, "topic": "allocation" },
+        { "sourceType": "PPTX", "slide": 28, "topic": "allocation" },
+        { "sourceType": "PPTX", "slide": 30, "topic": "free[- ]space|bit ?(map|vector)" },
+        { "sourceType": "PPTX", "slide": 33, "topic": "director" },
+        { "sourceType": "PPTX", "slide": 36, "topic": "director" },
+        { "sourceType": "PPTX", "slide": 38, "topic": "director" }
+      ],
+      "order": { "topic": "replacement|\\bfifo\\b|\\blru\\b|optimal", "after": "virtual memory" }
+    }
+  ]
+}

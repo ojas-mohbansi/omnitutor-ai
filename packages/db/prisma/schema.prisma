@@ -1,0 +1,317 @@
+// Study Companion — data model. See docs/ARCHITECTURE.md §5.
+// JSON column shapes are documented inline; their Zod contracts live in @sc/schemas.
+//
+// Delete behaviour (rebuild-friendly):
+//   Course  → cascades to everything under it
+//   Source  → cascades to its chunks (re-ingest = delete chunks, recreate)
+//   Topic   → chunks are untagged (SetNull); questions, mastery, events cascade
+//   Learner → cascades to mastery, events, assessments, attempts, chat
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum SourceType {
+  PDF
+  PPTX
+  VIDEO
+}
+
+enum SourceStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum ChunkKind {
+  TEXT // PDF paragraph or table (page)
+  FIGURE // diagram description, its own chunk (page)
+  SLIDE // one slide: text + figure descriptions (slide)
+  TRANSCRIPT // video segment: speech + on-screen content (tStart/tEnd)
+}
+
+enum QuestionType {
+  MCQ
+  SHORT
+  NUMERIC
+}
+
+enum AssessmentKind {
+  DIAGNOSTIC // cold start: 1 question per topic
+  QUIZ // student-chosen scope
+  MOCK // all topics, 10 questions
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+enum MasterySource {
+  QUIZ
+  CHAT
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum Coverage {
+  SUPPORTED
+  PARTIAL
+  NOT_COVERED
+}
+
+// ───────────────────── Knowledge base ─────────────────────
+
+model Course {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  sources     Source[]
+  topics      Topic[]
+  assessments Assessment[]
+  chats       ChatMessage[]
+}
+
+model Source {
+  id        String       @id @default(cuid())
+  courseId  String
+  type      SourceType
+  filename  String // original name shown in UI
+  mimeType  String // served as Content-Type by /api/files/[id]
+  sizeBytes Int
+  path      String // relative to repo root, e.g. data/uploads/<id>.pdf
+  status    SourceStatus @default(PENDING)
+  error     String?
+
+  // Ingestion progress for UI polling (pages, slide batches, or 1 for video).
+  progressDone  Int @default(0)
+  progressTotal Int @default(0)
+
+  pageCount   Int? // PDF pages / PPTX slides
+  durationSec Float? // VIDEO; used to clamp model-produced timestamps
+
+  // Gemini Files API handle (VIDEO). Remote copy expires after 48 h; originals stay in data/uploads.
+  geminiFileName      String?
+  geminiFileUri       String?
+  geminiFileExpiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chunks Chunk[]
+
+  @@index([courseId])
+}
+
+model Chunk {
+  id       String    @id @default(cuid())
+  sourceId String
+  kind     ChunkKind
+  seq      Int // order within the source (stable display + tie-breaks)
+  title    String? // slide title / figure caption when available
+  content  String // text that is embedded, retrieved and shown as the excerpt
+
+  // Exactly one locator is set, matching the source type.
+  page   Int? // PDF, 1-based
+  slide  Int? // PPTX, 1-based
+  tStart Float? // VIDEO, seconds
+  tEnd   Float? // VIDEO, seconds
+
+  conceptLabels String[] // from ingestion; input to course build
+
+  // New metadata columns (added by multimodal-dataset-pipeline).
+  section      String?  // free-text heading path, e.g. "3.2 Scheduling Criteria"; null when not detected
+  language     String   @default("en") // BCP-47 tag; max 35 chars (enforced in application layer, not DB)
+  qualityScore Float?   // heuristic content richness in [0.0, 1.0] (range enforced in application layer); null for pre-feature rows
+
+  embedding     Float[] // EMBED_DIM (768) values; empty until embedded
+  topicId       String? // nearest topic, set by course build
+
+  createdAt DateTime @default(now())
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  topic  Topic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@index([sourceId])
+  @@index([topicId])
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  courseId    String
+  seq         Int // display order (roughly prerequisite order)
+  name        String
+  description String
+  prereqIds   String[] // Topic ids within the same course
+  embedding   Float[] // of name + description; used to tag chunks
+  createdAt   DateTime @default(now())
+
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chunks        Chunk[]
+  questions     Question[]
+  mastery       Mastery[]
+  masteryEvents MasteryEvent[]
+
+  @@index([courseId])
+}
+
+// ───────────────────── Assessment ─────────────────────
+
+model Question {
+  id           String       @id @default(cuid())
+  topicId      String
+  assessmentId String? // quiz it was generated for; null if rejected by verification
+  position     Int? // order within the assessment
+  type         QuestionType
+  difficulty   Int // 1 easy · 2 medium · 3 hard
+  stem         String
+  stemHash     String // normalized-stem hash; no-repeat check per learner
+
+  // MCQ: string[] of options. null otherwise.
+  options                  Json?
+  // MCQ: { index: number } · NUMERIC: { value: number, unit?: string } · SHORT: { reference: string, keyPoints: string[] }
+  answer                   Json
+  // MCQ only: { "<option index>": "<misconception label>" } for each distractor.
+  distractorMisconceptions Json?
+  explanation              String // why the answer is right; basis for cited feedback
+  sourceChunkIds           String[]
+
+  // Blind verification: the verifier's independent answer; verified = it matched.
+  verified       Boolean @default(false)
+  verifierAnswer Json?
+
+  createdAt DateTime @default(now())
+
+  topic      Topic       @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  attempts   Attempt[]
+
+  @@index([topicId])
+  @@index([assessmentId])
+  @@index([stemHash])
+}
+
+model Assessment {
+  id            String           @id @default(cuid())
+  learnerId     String
+  courseId      String
+  kind          AssessmentKind
+  status        AssessmentStatus @default(IN_PROGRESS)
+  scopeTopicIds String[]
+  // Post-quiz report (QuizReport in @sc/schemas); null until submitted.
+  report        Json?
+  createdAt     DateTime         @default(now())
+  submittedAt   DateTime?
+
+  learner   Learner    @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  Attempt[]
+
+  @@index([learnerId])
+}
+
+model Attempt {
+  id            String   @id @default(cuid())
+  assessmentId  String
+  questionId    String
+  // QuizResponse in @sc/schemas: { type: "MCQ", index } · { type: "NUMERIC", value } · { type: "SHORT", text }
+  response      Json
+  correct       Boolean
+  score         Float // 0..1; partial credit for SHORT, 0/1 otherwise
+  // { text: string, citations: Citation[] }
+  feedback      Json
+  misconception String? // label of the chosen MCQ distractor, or from SHORT grading
+  createdAt     DateTime @default(now())
+
+  assessment    Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  masteryEvents MasteryEvent[]
+
+  @@unique([assessmentId, questionId])
+}
+
+// ───────────────────── Learner model ─────────────────────
+
+model Learner {
+  id           String   @id @default(cuid())
+  name         String
+  // scrypt hash; set = a private account (sign-in required for its data), null = open profile (tools/tests)
+  passwordHash String?
+  createdAt    DateTime @default(now())
+
+  mastery       Mastery[]
+  masteryEvents MasteryEvent[]
+  assessments   Assessment[]
+  chats         ChatMessage[]
+}
+
+model Mastery {
+  id        String   @id @default(cuid())
+  learnerId String
+  topicId   String
+  p         Float    @default(0.3) // BKT P(known); prior 0.3
+  n         Int      @default(0) // number of updates applied
+  updatedAt DateTime @updatedAt
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([learnerId, topicId])
+}
+
+model MasteryEvent {
+  id            String        @id @default(cuid())
+  learnerId     String
+  topicId       String
+  before        Float
+  after         Float
+  source        MasterySource
+  // What caused it (one of these, matching source) — evidence trail for the demo.
+  attemptId     String?
+  chatMessageId String?
+  createdAt     DateTime      @default(now())
+
+  learner     Learner      @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  topic       Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  attempt     Attempt?     @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+  chatMessage ChatMessage? @relation(fields: [chatMessageId], references: [id], onDelete: SetNull)
+
+  @@index([learnerId, createdAt])
+}
+
+// ───────────────────── Tutor ─────────────────────
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  learnerId String
+  courseId  String
+  role      ChatRole
+  content   String // user text, or assistant answer as plain text
+  // ASSISTANT only: [{ text, origin: "material"|"outside", citations: Citation[] }]
+  // Citations are snapshotted (excerpt + locator) so history survives re-ingestion.
+  blocks    Json?
+  coverage  Coverage?
+  refused   Boolean   @default(false)
+  topScore  Float? // best retrieval cosine; used to calibrate REFUSAL_TAU
+  createdAt DateTime  @default(now())
+
+  learner       Learner        @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  masteryEvents MasteryEvent[]
+
+  @@index([learnerId, createdAt])
+}

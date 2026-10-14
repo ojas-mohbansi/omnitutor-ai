@@ -1,12 +1,45 @@
+.kiro/
+
+# dependencies
 node_modules/
+.claude/
+.freebuff/
+# build output
 .next/
+out/
+/build/
 .turbo/
-dist/
-build/
-coverage/
-.env
-.env.*
+*.tsbuildinfo
+next-env.d.ts
+
+# env (only the example is committed)
+.env*
 !.env.example
-.data/
-*.log
+
+# uploaded originals
+/data/uploads/*
+!/data/uploads/.gitkeep
+
+# dataset files (too large for git)
+/data/dataset/*
+!/data/dataset/.gitkeep
+
+# python
+__pycache__/
+.venv/
+
+# misc
 .DS_Store
+*.pem
+npm-debug.log*
+coverage/
+
+# smoke-test video fixture
+/tools/smoke/fixtures/*.mp4
+
+# demo dataset (lecture video, textbook PDF, slide deck); too large for git
+/data/demo/*
+!/data/demo/README.md
+
+# Gemini response cache + usage ledger (local only)
+/data/cache/

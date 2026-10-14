@@ -1,0 +1,20 @@
+{
+  "name": "@sc/dataset",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dataset:export": "tsx src/export.ts",
+    "dataset:generate-eval": "tsx src/generate-eval.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@sc/core": "*",
+    "@sc/db": "*",
+    "@sc/schemas": "*"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
+  }
+}

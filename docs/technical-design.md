@@ -1,5 +1,12 @@
 # Technical Design — PostgreSQL RAG and Learning Algorithms
 
+> **Status: early design proposal, not the implemented system (audited 2026-10-14).**
+> This note predates the build and describes options that were **not** adopted, e.g. pgvector,
+> PostgreSQL full-text/hybrid search and per-course authorization. The implemented architecture is
+> [ARCHITECTURE.md](ARCHITECTURE.md) (deviations from the plan: its §0) and the API is [API_SPEC.md](API_SPEC.md).
+> Kept for reference only.
+
+
 ## 1. RAG is mandatory
 
 Every question about uploaded course content must pass through retrieval. The baseline stack is PostgreSQL full-text search plus `pgvector`, followed by evidence assembly, answerability checks, grounded generation, and citation validation. A separate vector database is deliberately excluded to keep the system lean.

@@ -1,0 +1,23 @@
+# Runs Postgres only. The app runs locally with `npm run dev`.
+name: multimodal
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: study-companion-db
+    environment:
+      POSTGRES_USER: study
+      POSTGRES_PASSWORD: study
+      POSTGRES_DB: study
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U study -d study"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

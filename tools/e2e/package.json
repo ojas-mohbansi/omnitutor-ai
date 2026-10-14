@@ -1,0 +1,32 @@
+{
+  "name": "@sc/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "tsx --test --test-concurrency=1 \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "stage1:pdf": "tsx src/stage1-pdf.ts",
+    "stage1:video": "tsx src/stage1-video.ts",
+    "stage1:retrieval": "tsx src/stage1-retrieval.ts",
+    "holdout:retrieval": "tsx src/stage1-retrieval.ts data/demo/testset.holdout.json",
+    "holdout:generalize": "tsx src/realdata-check.ts holdout/generalization.json",
+    "stage1:pptx": "tsx src/realdata-check.ts pptx/decks.json",
+    "stage1:build": "tsx src/stage1-build.ts",
+    "stage1:tutor": "tsx src/stage1-tutor.ts",
+    "stage1:quiz": "tsx src/stage1-quiz.ts",
+    "stage1:grading": "tsx src/stage1-grading.ts",
+    "stage1:mastery": "tsx src/stage1-mastery.ts",
+    "eval:rag": "tsx src/eval-rag.ts",
+    "eval:sim": "tsx src/sim-students.ts"
+  },
+  "dependencies": {
+    "@sc/client": "*",
+    "@sc/core": "*",
+    "@sc/db": "*",
+    "@sc/schemas": "*"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
+  }
+}

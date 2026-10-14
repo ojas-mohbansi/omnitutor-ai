@@ -1,5 +1,12 @@
 # Security and Privacy
 
+> **Status: early design proposal, not the implemented system (audited 2026-10-14).**
+> This note predates the build and describes options that were **not** adopted, e.g. pgvector,
+> PostgreSQL full-text/hybrid search and per-course authorization. The implemented architecture is
+> [ARCHITECTURE.md](ARCHITECTURE.md) (deviations from the plan: its §0) and the API is [API_SPEC.md](API_SPEC.md).
+> Kept for reference only.
+
+
 ## Protect
 
 Course uploads, derived source units, embeddings, conversations, assessments, learner profiles, and speech transcripts are private by default.

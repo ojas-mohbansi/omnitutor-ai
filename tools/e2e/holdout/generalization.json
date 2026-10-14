@@ -1,0 +1,63 @@
+{
+  "description": "Generalization holdout (overfitting audit, 2026-10-14). Files the pipeline was never developed or tuned on, each in its own course. Ground truth was written BEFORE the first ingestion: PDF facts by reading the pages (rendered with Windows.Data.Pdf); video facts from the slide/narration script that generated the video, with slide boundaries re-measured on the encoded file (ffmpeg freezedetect + scene cuts). Regexes are case-insensitive.",
+  "sources": [
+    {
+      "kind": "PDF",
+      "label": "REAL: C program on pipes (lab handout, 3 A4 pages of code; no slides, no figures)",
+      "courseId": "holdout-pipes",
+      "courseName": "Systems Programming Lab: Pipes in C",
+      "file": "data/demo/holdout/pipes-c-program.pdf",
+      "filename": "pipes-c-program.pdf",
+      "sha256": "20ac71c1418bb1f4cb1fc25b16c7f573b041b981ba0e2334b6a4217869714d48",
+      "pages": {
+        "1": ["fork\\(\\)\\s*and\\s*pipe\\(\\)", "#include\\s*<sys/wait\\.h>", "fd1\\[2\\]", "fixed_str", "operating systems", "pipe\\(fd1\\)\\s*==\\s*-1", "pipe failed", "p\\s*=\\s*fork\\(\\)", "fork failed", "parent process"],
+        "2": ["close\\(fd1\\[0\\]\\)", "write\\(fd1\\[1\\],\\s*input_str,\\s*strlen\\(input_str\\)\\s*\\+\\s*1\\)", "wait\\(null\\)", "read\\(fd2\\[0\\],\\s*concat_str,\\s*100\\)", "concatenated string", "child process", "concat_str\\[k\\+\\+\\]\\s*=\\s*fixed_str\\[i\\]", "\\\\0"],
+        "3": ["write\\(fd2\\[1\\],\\s*concat_str,\\s*strlen\\(concat_str\\)\\s*\\+\\s*1\\)", "close\\(fd2\\[1\\]\\)", "exit\\(0\\)"]
+      },
+      "questions": [
+        { "q": "What does the program print if creating the first pipe fails?", "page": 1 },
+        { "q": "Which header files does the program include?", "page": 1 },
+        { "q": "What does the parent do right after writing the input string into the first pipe?", "page": 2 },
+        { "q": "How does the child process append the fixed string to the string it received?", "page": 2 },
+        { "q": "What does the child do just before it exits?", "page": 3 }
+      ],
+      "offMaterial": ["What is round robin scheduling?", "Explain how a counting semaphore works."]
+    },
+    {
+      "kind": "VIDEO",
+      "label": "SYNTHETIC: 6 rendered slides + Windows TTS narration (Microsoft Zira), built for this test; NOT a real lecture",
+      "courseId": "holdout-hash",
+      "courseName": "Data Structures: Hash Tables",
+      "file": "data/demo/holdout/hash-tables-synthetic.mp4",
+      "filename": "hash-tables-synthetic.mp4",
+      "sha256": "c9d7780173034f0f4c8087c9a3138f8ce2e8fa234a2a7a2ec2ff2d4814a9fa69",
+      "durationSec": 69.433,
+      "toleranceSec": 3,
+      "boundaries": [9.333, 21.133, 33.267, 46.967, 59.533],
+      "facts": [
+        { "id": "s1-onscreen", "pattern": "quick introduction", "tStart": 0, "tEnd": 9.333 },
+        { "id": "s1-spoken", "pattern": "most useful data structures", "tStart": 0, "tEnd": 9.333 },
+        { "id": "s2-onscreen-title", "pattern": "what is a hash table", "tStart": 9.333, "tEnd": 21.133 },
+        { "id": "s2-onscreen-o1", "pattern": "o\\(1\\)", "tStart": 9.333, "tEnd": 21.133 },
+        { "id": "s2-spoken", "pattern": "no matter how many", "tStart": 9.333, "tEnd": 21.133 },
+        { "id": "s3-onscreen-mod", "pattern": "\\bmod(ulo)?\\b", "tStart": 21.133, "tEnd": 33.267 },
+        { "id": "s3-spoken", "pattern": "whole number", "tStart": 21.133, "tEnd": 33.267 },
+        { "id": "s4-chaining", "pattern": "chaining", "tStart": 33.267, "tEnd": 46.967 },
+        { "id": "s4-open-addressing", "pattern": "open addressing", "tStart": 33.267, "tEnd": 46.967 },
+        { "id": "s4-spoken", "pattern": "probes the table", "tStart": 33.267, "tEnd": 46.967 },
+        { "id": "s5-onscreen-threshold", "pattern": "0\\.75", "tStart": 46.967, "tEnd": 59.533 },
+        { "id": "s5-spoken", "pattern": "double the size", "tStart": 46.967, "tEnd": 59.533 },
+        { "id": "s6-onscreen", "pattern": "load factor low", "tStart": 59.533, "tEnd": 69.433 },
+        { "id": "s6-spoken", "pattern": "under control", "tStart": 59.533, "tEnd": 69.433 }
+      ],
+      "questions": [
+        { "q": "How is the bucket index computed from a key?", "tStart": 21.133, "tEnd": 33.267 },
+        { "q": "What are two ways to handle collisions?", "tStart": 33.267, "tEnd": 46.967 },
+        { "q": "When do many libraries resize a hash table?", "tStart": 46.967, "tEnd": 59.533 },
+        { "q": "How fast is a lookup in a hash table on average?", "tStart": 9.333, "tEnd": 21.133 },
+        { "q": "What is the load factor?", "tStart": 46.967, "tEnd": 59.533 }
+      ],
+      "offMaterial": ["What is a binary search tree?", "What does the dispatcher do in an operating system?"]
+    }
+  ]
+}

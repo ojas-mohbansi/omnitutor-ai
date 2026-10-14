@@ -1,0 +1,21 @@
+{
+  "description": "Ground truth for Module 7 (video ingestion) on the real Stage-1 video. Intervals come from ffmpeg scene detection (slide changes) plus a frame from each segment; each pattern is ON-SCREEN text (case-insensitive regex) that must appear in a chunk whose [tStart, tEnd] overlaps the interval (±toleranceSec). Speech is not in the ground truth (no reference transcript exists).",
+  "file": "data/demo/video/cpu-scheduling-2min.mp4",
+  "sha256": "5e3d3e80440006563e489e5bbc1ba8158e1e4339dc21ac3eb2f57e434e6e62e0",
+  "durationSec": 154.16,
+  "toleranceSec": 3,
+  "facts": [
+    { "id": "pitfall", "pattern": "exam pitfall|process management", "tStart": 6.7, "tEnd": 19.4 },
+    { "id": "formal-definition", "pattern": "formal definition", "tStart": 19.4, "tEnd": 24.6 },
+    { "id": "definition-text", "pattern": "allocat\\w* the cpu", "tStart": 24.6, "tEnd": 38.8 },
+    { "id": "core-principles", "pattern": "core principles", "tStart": 38.8, "tEnd": 46.3 },
+    { "id": "preemptive", "pattern": "non-?\\s?preemptive", "tStart": 46.3, "tEnd": 75.2 },
+    { "id": "waiting-room", "pattern": "waiting room", "tStart": 46.3, "tEnd": 75.2 },
+    { "id": "simple-analogy", "pattern": "simple analogy|make it concrete", "tStart": 75.2, "tEnd": 80.8 },
+    { "id": "counter-illustration", "pattern": "counter|customer", "tStart": 80.8, "tEnd": 97.5 },
+    { "id": "decoding", "pattern": "decoding the analogy|counter to code", "tStart": 97.5, "tEnd": 102.3 },
+    { "id": "analogy-table", "pattern": "clerk[^\\n]{0,80}cpu scheduler|cpu scheduler[^\\n]{0,80}clerk", "tStart": 102.3, "tEnd": 124.8 },
+    { "id": "exam-takeaway", "pattern": "exam takeaway|three key points", "tStart": 124.8, "tEnd": 132.4 },
+    { "id": "key-exam-points", "pattern": "key exam points", "tStart": 132.4, "tEnd": 154.2 }
+  ]
+}

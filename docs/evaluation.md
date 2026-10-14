@@ -1,5 +1,12 @@
 # Evaluation and Benchmarking
 
+> **Status: early design proposal, not the implemented system (audited 2026-10-14).**
+> This note predates the build and describes options that were **not** adopted, e.g. pgvector,
+> PostgreSQL full-text/hybrid search and per-course authorization. The implemented architecture is
+> [ARCHITECTURE.md](ARCHITECTURE.md) (deviations from the plan: its §0) and the API is [API_SPEC.md](API_SPEC.md).
+> Kept for reference only.
+
+
 ## Objective
 
 Demonstrate reliable multimodal retrieval, source grounding, question quality, and learner adaptation. The Track D brief explicitly asks for a team-built test set with known source locations and off-material queries. This document specifies evaluation; it does not contain measured results.

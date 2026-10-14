@@ -1,0 +1,52 @@
+{
+  "name": "study-companion",
+  "private": true,
+  "packageManager": "npm@11.9.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:generate": "turbo db:generate",
+    "db:status": "npm run db:status -w @sc/db",
+    "smoke": "npm run smoke -w @sc/smoke --",
+    "models:list": "npm run models -w @sc/smoke",
+    "db:migrate": "npm run db:migrate -w @sc/db --",
+    "db:seed": "npm run db:seed -w @sc/db",
+    "db:verify": "npm run db:verify -w @sc/db",
+    "db:studio": "npm run db:studio -w @sc/db",
+    "test": "turbo test",
+    "db:deploy": "npm run db:deploy -w @sc/db",
+    "test:e2e": "npm run test:e2e -w @sc/e2e",
+    "stage1:pdf": "npm run stage1:pdf -w @sc/e2e",
+    "stage1:video": "npm run stage1:video -w @sc/e2e",
+    "stage1:retrieval": "npm run stage1:retrieval -w @sc/e2e",
+    "stage1:pptx": "npm run stage1:pptx -w @sc/e2e",
+    "stage1:build": "npm run stage1:build -w @sc/e2e",
+    "stage1:tutor": "npm run stage1:tutor -w @sc/e2e",
+    "stage1:quiz": "npm run stage1:quiz -w @sc/e2e",
+    "stage1:grading": "npm run stage1:grading -w @sc/e2e",
+    "stage1:mastery": "npm run stage1:mastery -w @sc/e2e",
+    "holdout:retrieval": "npm run holdout:retrieval -w @sc/e2e",
+    "holdout:generalize": "npm run holdout:generalize -w @sc/e2e",
+    "eval:rag": "npm run eval:rag -w @sc/e2e",
+    "eval:sim": "npm run eval:sim -w @sc/e2e",
+    "dataset:export": "npm run dataset:export -w @sc/dataset --",
+    "dataset:generate-eval": "npm run dataset:generate-eval -w @sc/dataset --"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "turbo": "2.11.7",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}
