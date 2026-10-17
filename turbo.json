@@ -25,14 +25,6 @@
     },
     "typecheck": {},
     "lint": {},
-    "test": {},
-    "dataset:export": {
-      "dependsOn": ["^db:generate"],
-      "cache": false
-    },
-    "dataset:generate-eval": {
-      "dependsOn": ["^db:generate"],
-      "cache": false
-    }
+    "test": {}
   }
 }

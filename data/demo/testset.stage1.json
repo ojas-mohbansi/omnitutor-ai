@@ -1,0 +1,125 @@
+[
+  {
+    "id": "s1-pdf-cpu-io-bound",
+    "question": "Why is a process called CPU bound or I/O bound?",
+    "modality": "pdf",
+    "needsFigure": false,
+    "groundTruth": "An I/O-bound process has many short CPU bursts and spends most of its time waiting for I/O (e.g. a word processor); a CPU-bound process has a few long CPU bursts with hardly any I/O (e.g. gcc, scientific modelling, 3D rendering). Source: CSL207 Sessional 1 2022-23 Q1.4.",
+    "expected": [
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 3 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 4 }
+    ]
+  },
+  {
+    "id": "s1-pdf-printf-transition",
+    "question": "A process in the running state executes printf(). What is its next state transition, and why?",
+    "modality": "pdf",
+    "needsFigure": true,
+    "groundTruth": "Running -> waiting via 'I/O or event wait', because printf requests I/O; when the I/O completes it goes waiting -> ready ('I/O or event completion') and must be dispatched again. Source: CSL207 Sessional 1 2023-24 Q3(b).",
+    "expected": [{ "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 5 }]
+  },
+  {
+    "id": "s1-pdf-missing-transitions",
+    "question": "In the process state diagram, can a process move directly from ready to waiting, or from waiting to running?",
+    "modality": "pdf",
+    "needsFigure": true,
+    "groundTruth": "No. The diagram has no ready->waiting or waiting->running arrows: only a running process can block on I/O, and a process whose I/O completes returns to ready and must be picked by the scheduler (scheduler dispatch). Source: CSL207 Sessional 1 2022-23 Q2(b).",
+    "expected": [{ "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 5 }]
+  },
+  {
+    "id": "s1-pdf-dispatcher",
+    "question": "What does the dispatcher do, and what is dispatch latency?",
+    "modality": "pdf",
+    "needsFigure": false,
+    "groundTruth": "The dispatcher gives the CPU to the process selected by the short-term scheduler: switching context, switching to user mode, and jumping to the proper location in the user program. Dispatch latency is the time it takes to stop one process and start another.",
+    "expected": [{ "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 6 }]
+  },
+  {
+    "id": "s1-pdf-rr-numerical",
+    "question": "Under Round Robin with a time slice of 2, P1-P4 arrive at time 0 with burst times 5, 4, 2 and 3. What are the average waiting time, the average response time and the number of context switches?",
+    "modality": "pdf",
+    "needsFigure": true,
+    "groundTruth": "Schedule P1 P2 P3 P4 P1 P2 P4 P1; average waiting time (9+8+4+10)/4 = 7.75; average response time (0+2+4+6)/4 = 3; 7 context switches.",
+    "expected": [{ "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 9 }]
+  },
+  {
+    "id": "s1-pdf-tat-formula",
+    "question": "How are turnaround time, burst time and waiting time related?",
+    "modality": "pdf",
+    "needsFigure": false,
+    "groundTruth": "Turnaround time = burst time + waiting time, so waiting time = turnaround time - burst time. Response time = time the process first gets the CPU - arrival time.",
+    "expected": [{ "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 8 }]
+  },
+  {
+    "id": "s1-video-definition",
+    "question": "How does the video define CPU scheduling?",
+    "modality": "video",
+    "needsFigure": false,
+    "groundTruth": "An OS mechanism that selects a process from the ready queue and allocates the CPU based on a policy.",
+    "expected": [{ "sourceType": "VIDEO", "filename": "cpu-scheduling-2min.mp4", "tStart": 24.6, "tEnd": 38.8 }]
+  },
+  {
+    "id": "s1-video-trigger-method",
+    "question": "When are CPU scheduling decisions made, and what are the two methods of scheduling?",
+    "modality": "video",
+    "needsFigure": false,
+    "groundTruth": "Decisions are made when a process changes its state; scheduling can be preemptive (forced) or non-preemptive (voluntary).",
+    "expected": [{ "sourceType": "VIDEO", "filename": "cpu-scheduling-2min.mp4", "tStart": 46.3, "tEnd": 75.2 }]
+  },
+  {
+    "id": "s1-video-analogy-clerk",
+    "question": "In the service-counter analogy for CPU scheduling, what does the clerk represent?",
+    "modality": "video",
+    "needsFigure": true,
+    "groundTruth": "The CPU scheduler (service counter = CPU, waiting customers = processes in the ready queue, rule for choosing = CPU scheduling policy, serving a customer = CPU execution by a process).",
+    "expected": [{ "sourceType": "VIDEO", "filename": "cpu-scheduling-2min.mp4", "tStart": 102.3, "tEnd": 124.8 }]
+  },
+  {
+    "id": "s1-video-exam-pitfall",
+    "question": "According to the video, what is a classic exam pitfall about CPU scheduling?",
+    "modality": "video",
+    "needsFigure": false,
+    "groundTruth": "Confusing CPU scheduling with process management, which leads to incorrect performance analysis.",
+    "expected": [{ "sourceType": "VIDEO", "filename": "cpu-scheduling-2min.mp4", "tStart": 6.7, "tEnd": 19.4 }]
+  },
+  {
+    "id": "s1-off-bankers",
+    "question": "Using the Banker's algorithm, how do you decide whether the system is in a safe state?",
+    "modality": "off_material",
+    "needsFigure": false,
+    "groundTruth": "",
+    "expected": []
+  },
+  {
+    "id": "s1-off-page-faults",
+    "question": "How many page faults occur with FIFO page replacement for the reference string 0172327103 with four empty frames?",
+    "modality": "off_material",
+    "needsFigure": false,
+    "groundTruth": "",
+    "expected": []
+  },
+  {
+    "id": "s1-off-disk-seek",
+    "question": "Compute the total seek time with SSTF and SCAN for track requests 811, 348, 153, 968, 407, 500, 190 with the head at 756 moving towards 0.",
+    "modality": "off_material",
+    "needsFigure": false,
+    "groundTruth": "",
+    "expected": []
+  },
+  {
+    "id": "s1-near-sjf-order",
+    "question": "Processes with expected execution times 5, 18, 9 and 12 are in the ready queue of a non-preemptive scheduler. In what order should they run to minimise the average waiting time?",
+    "modality": "off_material",
+    "needsFigure": false,
+    "groundTruth": "",
+    "expected": []
+  },
+  {
+    "id": "s1-near-edf",
+    "question": "Four periodic tasks have periods 50, 100, 200 and 250 ms and need 35, 20, 10 and x ms of CPU time. What is the largest x for which the set is schedulable under EDF?",
+    "modality": "off_material",
+    "needsFigure": false,
+    "groundTruth": "",
+    "expected": []
+  }
+]

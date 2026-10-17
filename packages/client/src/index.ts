@@ -5,7 +5,7 @@
 import { z } from "zod";
 import {
   ApiErrorBody, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, endpoints, paths, sourceTypeFromFilename,
-  type ApiErrorCode, type BuildRequest, type ChatRequest, type Credentials, type CreateLearnerRequest, type CreateQuizRequest,
+  type ApiErrorCode, type BuildRequest, type ChatRequest, type Credentials, type LearnerProfile, type CreateNotebookRequest, type GenerateFlashcardsRequest, type CreateLearnerRequest, type CreateQuizRequest,
   type EndpointName, type EndpointResponse, type EvalAnswerRequest, type SearchRequest, type SubmitRequest,
 } from "@sc/schemas";
 import { mocks } from "@sc/schemas/mocks";
@@ -110,6 +110,16 @@ export function createApiClient(options: ApiClientOptions = {}) {
     login: (body: Credentials) => sendJson("login", paths.login(), body),
     logout: () => send("logout", paths.logout(), { method: "POST" }),
     session: () => get("session", paths.session()),
+    getProfile: () => get("getProfile", paths.profile()),
+    listNotebooks: () => get("listNotebooks", paths.notebooks()),
+    listFlashcards: (topicId?: string) => get("listFlashcards", paths.flashcards(topicId)),
+    /** New verified cards for one topic (2 Gemini calls). */
+    generateFlashcards: (body: GenerateFlashcardsRequest) => sendJson("generateFlashcards", paths.generateFlashcards(), body),
+    reviewFlashcard: (id: string, knew: boolean) => sendJson("reviewFlashcard", paths.reviewFlashcard(id), { knew }),
+    createNotebook: (body: CreateNotebookRequest) => sendJson("createNotebook", paths.notebooks(), body),
+    selectNotebook: (notebookId: string) => sendJson("selectNotebook", paths.activeNotebook(), { notebookId }),
+    deleteNotebook: (id: string) => send("deleteNotebook", paths.notebook(id), { method: "DELETE" }),
+    saveProfile: (body: LearnerProfile) => sendJson("saveProfile", paths.profile(), body),
 
     listSources: () => get("listSources", paths.sources()),
     /** Uploads raw file bytes. Type comes from the extension (.pdf / .pptx / .mp4); max MAX_UPLOAD_MB. */
@@ -137,6 +147,8 @@ export function createApiClient(options: ApiClientOptions = {}) {
     chat: (body: ChatRequest) => sendJson("chat", paths.chat(), body),
     chatHistory: (learnerId: string) => get("chatHistory", paths.chatHistory(learnerId)),
     evalAnswer: (body: EvalAnswerRequest) => sendJson("evalAnswer", paths.evalAnswer(), body),
+    /** Latest evaluation reports written by `npm run eval:rag` / `npm run eval:sim` (null = not run yet). */
+    evalReport: () => get("evalReport", paths.evalReport()),
 
     createQuiz: (body: CreateQuizRequest) => sendJson("createQuiz", paths.quizzes(), body),
     getQuiz: (assessmentId: string) => get("getQuiz", paths.quiz(assessmentId)),

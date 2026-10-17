@@ -15,9 +15,11 @@ import { sha256 } from "./cache";
 import { requireCourse } from "./course";
 import { requireLearner } from "./learners";
 import { generateJson } from "./llm";
+import { getProfile, profileInstructions, temperatureFor } from "./profile";
 import { retrieve, toCitation, type RetrievedChunk } from "./retrieve";
+import { stripExcerptRefs } from "./text";
 
-export const TUTOR_PROMPT_VERSION = "tutor-v1";
+export const TUTOR_PROMPT_VERSION = "tutor-v2-teach";
 /** Retrieved excerpts given to the model. */
 export const TUTOR_K = 6;
 const MAX_EXCERPT_CHARS_FOR_MODEL = 1_500;
@@ -38,19 +40,19 @@ export type TutorModelOutput = z.infer<typeof TutorModelOutput>;
 
 /** Subject-agnostic: the course name (Course.name in the DB) is the only context given. */
 export function tutorPrompt(courseName: string): string {
-  return `You are the tutor in a study assistant for the course "${courseName}". You answer a student's question using ONLY the numbered source excerpts you are given (from the course's PDFs, slides and lecture videos). Every claim that comes from the material must be traceable to an excerpt.
+  return `You are a personal tutor in a study assistant for the course "${courseName}". Your job is to TEACH the student: explain the idea so they understand it, not just point to where it is written. You are given numbered source excerpts from the course's own PDFs, slides and lecture videos; they are the only source of facts about the course.
 
 Return JSON:
 - coverage: "SUPPORTED" if the excerpts answer the question, "PARTIAL" if they answer only part of it, "NOT_COVERED" if they do not address it at all.
-- blocks: the answer, in order, split into short paragraphs:
-  - origin "material": states only what the cited excerpts say. citations = the ids of every excerpt it relies on (e.g. ["C2", "C5"]). Never cite an excerpt that does not support the block.
-  - origin "outside": anything NOT in the excerpts (general background, an analogy, a step the material skips). citations = []. Use it sparingly and only when it helps.
-  If coverage is "NOT_COVERED", return no material blocks.
+- blocks: the explanation, in teaching order, as short paragraphs (usually 3-6 blocks):
+  - origin "material": explains, in your own clear words, what the cited excerpts say: define the idea, walk through how it works, connect the pieces, and for calculations show every step with the excerpts' method and formulas. Every fact in it must come from the excerpts it cites. citations = the ids of every excerpt it relies on (e.g. ["C2", "C5"]). Never cite an excerpt that does not support the block.
+  - origin "outside": teaching help that is NOT in the excerpts: an intuition or analogy, an everyday example, a worked example with new numbers, a memory trick, or one short question that checks understanding. citations = []. Use these to make the explanation land, never to add course facts the excerpts don't contain.
+  A good answer starts with the core idea in one or two sentences, then explains it, then makes it concrete. If coverage is "NOT_COVERED", return no material blocks.
 - learnerEvidence: what the student's OWN words show about their understanding, per topic key (e.g. "T3"): "understands" if they state something correct, "misconception" if they state or assume something wrong. Merely asking a question is not evidence; return [] when there is none.
 
 Teaching rules:
-- Adapt to the student's mastery (given per topic): for weak topics explain step by step from the basics and point out weak prerequisites; for strong topics be concise.
-- For numerical questions, show the working using the method and formulas in the excerpts.
+- Adapt depth to the student's measured mastery (given per topic): for weak topics teach from the basics and name any weak prerequisite; for strong topics go deeper and be brief on basics.
+- If the student seems confused or repeats a question, explain it a different way than before.
 - Answer in the language the student writes in.
 - Do not mention excerpt ids in the text; put them only in citations.
 
@@ -105,7 +107,7 @@ export function groundAnswer(raw: TutorModelOutput, citations: Citation[], refus
   let relabelled = 0;
   const blocks: TutorBlock[] = [];
   for (const b of raw.blocks) {
-    const text = b.text.trim();
+    const text = stripExcerptRefs(b.text.trim()); // ids belong in citations, never in the text
     if (!text) continue;
     if (b.origin === "outside") {
       blocks.push({ origin: "outside", text, citations: [] });
@@ -128,7 +130,8 @@ export function groundAnswer(raw: TutorModelOutput, citations: Citation[], refus
   if (raw.coverage === "NOT_COVERED" || !hasMaterial) {
     return {
       coverage: "NOT_COVERED", refused: true, refusalReason: "not_covered", droppedCitations, relabelled,
-      blocks: [{ origin: "outside", text: refusalNote, citations: [] }, ...blocks.filter((b) => b.origin === "outside")],
+      // A decline is only the decline: no teaching from outside the material on a question it doesn't cover.
+      blocks: [{ origin: "outside", text: refusalNote, citations: [] }],
     };
   }
   return { coverage: raw.coverage, refused: false, refusalReason: null, blocks, droppedCitations, relabelled };
@@ -183,14 +186,16 @@ async function answerCore(input: {
       blocks: [{ origin: "outside", text: note, citations: [] }], topScore, retrieved: results, evidence: [], topics, calledModel: false,
     };
   }
-  const system = tutorPrompt(course.name);
+  // Personalisation: the onboarding profile sets the voice, structure and sampling temperature.
+  const profile = input.learnerId ? await getProfile(input.learnerId) : null;
+  const system = [tutorPrompt(course.name), profileInstructions(profile)].filter(Boolean).join("\n\n");
   const text = tutorInput({ question: input.question, chunks: results, topics, history: input.history });
   const r = await generateJson({
     role: "strong",
     schema: TutorModelOutput,
     system,
     parts: [{ text }],
-    temperature: 0.2,
+    temperature: temperatureFor(profile),
     ...(input.cache && { cacheKey: `tutor|${TUTOR_PROMPT_VERSION}|${sha256(system).slice(0, 16)}|${sha256(text)}` }),
   });
   const grounded = groundAnswer(r.data, citations, note);

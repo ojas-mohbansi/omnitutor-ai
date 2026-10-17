@@ -67,7 +67,7 @@ Caveat: the simulated students use different parameters from the tutor's learner
 Grounding is mostly engineering around the model: retrieval, validation and refusal rules matter more than the prompt.
 
 ### Limitations (honest)
-- Accounts are basic: no email verification or password reset; course material is shared by all accounts.
+- Accounts are basic: no email verification or password reset; one private course per account (no multiple notebooks yet).
 - Runs locally (no deployment, as the track allows).
 - Diagrams drawn only with PowerPoint shapes lose their layout.
 - Video files must be at most 20 minutes.

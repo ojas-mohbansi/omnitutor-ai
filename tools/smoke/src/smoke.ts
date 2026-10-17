@@ -92,6 +92,7 @@ const checks: Record<string, () => Promise<Result>> = {
           { text: "Split this video into coherent segments. For each give tStart and tEnd in seconds, the spoken transcript, a description of what is on screen, and key concepts." },
         ],
         estimatedInputTokens: Math.ceil(durationSec * 300) + 500, // reserve TPM: ~300 tokens/s until measured
+        keyIndex: file.keyIndex, // only the uploader's project can read the file
       });
       const s = data.segments;
       const ok = s.length > 0 && s.every((x) => x.tEnd >= x.tStart && x.tStart >= 0);
@@ -102,7 +103,7 @@ const checks: Record<string, () => Promise<Result>> = {
         usage,
       };
     } finally {
-      await deleteFile(file.name).catch(() => {});
+      await deleteFile(file.name, file.keyIndex).catch(() => {});
     }
   },
 

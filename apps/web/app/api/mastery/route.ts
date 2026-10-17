@@ -1,4 +1,4 @@
-import { authorizeLearner, masteryView } from "@sc/core";
+import { authorizeLearner, courseFor, masteryView } from "@sc/core";
 import { endpoints } from "@sc/schemas";
 import { handle, json, readQuery, sessionOf } from "../_lib/http";
 
@@ -6,5 +6,5 @@ import { handle, json, readQuery, sessionOf } from "../_lib/http";
 export const GET = handle(async (req) => {
   const query = readQuery(req, endpoints.mastery.query);
   await authorizeLearner(query.learnerId, sessionOf(req));
-  return json(endpoints.mastery.response, await masteryView(query.learnerId));
+  return json(endpoints.mastery.response, await masteryView(query.learnerId, await courseFor(sessionOf(req))));
 });

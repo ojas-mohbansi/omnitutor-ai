@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LedgerReveal } from "@/components/ledger-reveal";
-import { LiveGrounding, LiveSources, LiveStats } from "@/components/live-course";
+import { HeroCta, LiveGrounding, LiveSources, LiveStats, StudyHub } from "@/components/live-course";
 
 /**
  * The landing surface.
@@ -43,9 +43,12 @@ export default function LandingPage() {
       {/* Opening spread: type against one piece of evidence, with a bare      */}
       {/* column between them. The empty gutter is the asymmetry.             */}
       {/* ------------------------------------------------------------------ */}
+      {/* Signed in: where to go next comes first. */}
+      <StudyHub />
+
       <section
         aria-labelledby="landing-hero"
-        className="flex items-center px-4 py-14 sm:px-6 lg:min-h-[calc(100dvh-3.5rem)] lg:py-20"
+        className="flex items-center px-4 py-14 sm:px-6 lg:py-24"
       >
         <div className="mx-auto grid w-full max-w-[68rem] grid-cols-1 gap-x-8 gap-y-12 lg:grid-cols-12">
           <div className="lg:col-span-7">
@@ -59,12 +62,7 @@ export default function LandingPage() {
               Upload a lecture, a textbook and a deck. Ask anything and get
               answers citing the exact page, slide or timestamp.
             </p>
-            <Link
-              href="/sources"
-              className="mt-9 inline-flex min-h-11 items-center rounded-card bg-ink px-5 text-body font-medium text-paper transition-colors duration-200 ease-ledger hover:bg-ink/85"
-            >
-              Add course material
-            </Link>
+            <HeroCta />
           </div>
 
           <LiveStats />

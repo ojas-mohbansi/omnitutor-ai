@@ -323,3 +323,23 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Page transition: each route fades up slightly on navigation (LearnerGate keys it by path). */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-in {
+  animation: page-in 260ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-in {
+    animation: none;
+  }
+}

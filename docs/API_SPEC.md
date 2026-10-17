@@ -146,7 +146,19 @@ Examples `[mock]` (`citations` in `mocks.ts`):
 | E20 | POST | `/api/search` | `paths.search()` | ✅ | 8 | `SearchRequest` | `SearchResponse` |
 | E19 | GET | `/api/assessments?learnerId=` (quiz history list) | — | 🔶 | — | — | — |
 
-Registry: `packages/schemas/src/endpoints.ts`, with 22 JSON endpoints (E1–E5, E7–E18, E20–E24) plus `NON_JSON_ROUTES.file` (E6).
+Registry: `packages/schemas/src/endpoints.ts`, with 29 JSON endpoints (E1–E5, E7–E18, E20–E31) plus `NON_JSON_ROUTES.file` (E6).
+
+| # | Method | Route pattern | URL builder | Status | Module | Request | Response |
+|---|---|---|---|---|---|---|---|
+| E25 | GET | `/api/profile` | `paths.profile()` | ✅ | 17 | — | `ProfileView` (`{ profile: LearnerProfile \| null }`; 401 without a session) |
+| E26 | POST | `/api/profile` | `paths.profile()` | ✅ | 17 | `LearnerProfile` (`tone`, `style`, `level`, `goal`) | `ProfileView` |
+| E27 | GET | `/api/notebooks` | `paths.notebooks()` | ✅ | 18 | — | `NotebookList` (newest first, `active` marked; creates the first notebook if none) |
+| E28 | POST | `/api/notebooks` | `paths.notebooks()` | ✅ | 18 | `CreateNotebookRequest` (`name`, 1–80) | `NotebookList` (the new one is active) |
+| E29 | POST | `/api/notebooks/active` | `paths.activeNotebook()` | ✅ | 18 | `SelectNotebookRequest` (`notebookId`) | `NotebookList` (401 for another account's notebook) |
+| E30 | DELETE | `/api/notebooks/[id]` | `paths.notebook(id)` | ✅ | 18 | — | `NotebookList` (deletes everything inside; 409 while a file is processing) |
+| E31 | GET | `/api/eval/report` | `paths.evalReport()` | ✅ | 19 | — | `EvalReportView` (`{ rag, sim, problems }`; public: test-set results only) |
+
+**Course resolution (Modules 16–18):** every course-scoped route (sources, topics, build, search, chat, quiz, mastery, eval answer) calls `courseFor(session, requested?)`: signed in → the account's active notebook; no session → the shared evaluation course; a requested course must be owned by the session (ownerless only without a session), else 401. Source routes (delete, ingest, file) check `authorizeSource`.
 
 ### E21–E24. Accounts: ✅ LIVE (Module 16)
 - **Body (signup, login):** `Credentials = { name: string (trimmed, 1–60), password: string (8–200) }`.

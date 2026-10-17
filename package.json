@@ -37,9 +37,7 @@
     "holdout:retrieval": "npm run holdout:retrieval -w @sc/e2e",
     "holdout:generalize": "npm run holdout:generalize -w @sc/e2e",
     "eval:rag": "npm run eval:rag -w @sc/e2e",
-    "eval:sim": "npm run eval:sim -w @sc/e2e",
-    "dataset:export": "npm run dataset:export -w @sc/dataset --",
-    "dataset:generate-eval": "npm run dataset:generate-eval -w @sc/dataset --"
+    "eval:sim": "npm run eval:sim -w @sc/e2e"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -18,6 +18,9 @@ This document is the shared reference for both teammates. The design is frozen: 
 | One video call per file | One call per **≤ 60 s window** (`videoMetadata` offsets) | Timestamps stay accurate (mean error 0.3 s on the real video) |
 | Blind verify with the generating model | Verify with a **different model** (`LLM_MODEL_VERIFY`, cross-model) | Track D lists cross-model verification; falls back to `LLM_MODEL_FAST` if unset |
 | `tools/eval/ragas.py`, `tools/eval/score.ts`, `tools/sim` (teammate) | `tools/e2e/src/eval-rag.ts` (RAGAS metric **definitions** re-implemented with a Gemini judge; not the `ragas` package) and `tools/e2e/src/sim-students.ts` (no LLM) | The teammate deliverables did not arrive; one TypeScript toolchain |
+| One shared course; learner picker | **Notebooks** (Module 18): each account owns any number of private courses ("notebooks"); one is active (`Learner.activeCourseId`), and every course-scoped route resolves it through `courseFor()`, so sources, topics, tutor history, quizzes and mastery are per notebook. Another account's notebook, file or data returns 401. Requests without a session use the shared evaluation course | Users asked for private, NotebookLM-style notebooks |
+| Tutor adapts to mastery only | **Onboarding profile** (Module 17): tone (friendly / funny / serious / concise, which also sets the sampling temperature 0.45 / 0.8 / 0.15 / 0.2), explanation style, prior level and goal; added to the tutor's system prompt. The tutor prompt (v2) now *teaches*: it explains in its own words with cited material blocks and labelled outside analogies/examples | Personalised tutoring is the core of Track D |
+| Evaluation numbers in docs only | **Evaluation page** (Module 19): `npm run eval:rag` / `eval:sim` write validated reports to `data/eval/` (in the repo); `GET /api/eval/report` serves them and `/evaluation` shows the metric matrix (overall × PDF / slides / video × test set), every question, and the simulator. The judge is `LLM_MODEL_VERIFY`, a different model from the tutor's | Track D requirement 5; judges can see the measured results |
 | One Gemini key | `APP_GEMINI_API_KEYS` rotation on 429 or a rejected key, `LLM_MODEL_FALLBACK` on 5xx/429/404, per-request timeout `LLM_TIMEOUT_MS` (120 s) | Free-tier quotas and overloaded models were the main failure mode in testing |
 
 The teammate's early design notes (`docs/product-requirements.md`, `system-architecture.md`, `technical-design.md`, `database-and-rag.md`, `api-contracts.md`, `delivery-plan.md`, `development-deployment.md`, `evaluation.md`, `security-privacy.md`, `glossary-and-decisions.md`) describe a **different, unbuilt design** (pgvector, full-text hybrid search, per-course authorization). Each carries a banner saying so; this file and [API_SPEC.md](API_SPEC.md) are authoritative.
@@ -140,8 +143,6 @@ multimodal/
 │  ├─ smoke/                       @sc/smoke — Gemini smoke tests + list-models (Module 1)
 │  ├─ e2e/                         @sc/e2e — end-to-end tests against the running server (npm run test:e2e)
 │  │                                 + stage1-pdf.ts / stage1/expectations.json: real-data ingestion check (npm run stage1:pdf)
-│  ├─ dataset/                     @sc/dataset — offline export + eval-generation scripts
-│  │  └─ src/  export.ts  generate-eval.ts
 │  ├─ eval/                        ragas.py, score.ts, testset.json (teammate, Module 15)
 │  └─ sim/                         simulated students (teammate, Module 15)
 ├─ data/uploads/                   uploaded originals (gitignored)
@@ -167,8 +168,7 @@ Course ─┬─< Source (type PDF|PPTX|VIDEO, filename, mimeType, sizeBytes, pa
         │           status PENDING|PROCESSING|READY|FAILED, error?, progressDone/Total,
         │           pageCount?, durationSec?, geminiFileName/Uri/ExpiresAt?)
         │       └─< Chunk (kind TEXT|FIGURE|SLIDE|TRANSCRIPT, seq, title?, content,
-        │                  page? | slide? | tStart?,tEnd?, conceptLabels[], section?, language, qualityScore?,
-        │                  embedding Float[768], topicId?)
+        │                  page? | slide? | tStart?,tEnd?, conceptLabels[], embedding Float[768], topicId?)
         ├─< Topic (seq, name, description, prereqIds[], embedding Float[768])
         │        └─< Question (type MCQ|SHORT|NUMERIC, difficulty 1-3, stem, stemHash, options?, answer,
         │                      distractorMisconceptions?, explanation, sourceChunkIds[], verified,
@@ -248,19 +248,6 @@ One LLM call over an outline of every chunk (locator, title or excerpt, concept 
 Standard BKT per topic: prior `p0 = 0.3`, learn `0.15`, slip `0.1`, guess `0.25` (MCQ) / `0.1` (short) / `0.05` (numeric).
 Each update writes `Mastery` and a `MasteryEvent(before, after, source)`, which the dashboard history chart reads.
 
-### 6.6 Dataset pipeline (`npm run dataset:export`, `npm run dataset:generate-eval`)
-
-**Export** (`tools/dataset/src/export.ts`):
-Reads all READY chunks for a course from Postgres and writes three files under `data/dataset/{courseId}/`:
-- `chunks.jsonl` — one `ChunkExport` JSON object per line, including the 768-dim embedding.
-- `metadata.csv` — same fields minus `embedding`, with `content_preview` (first 200 chars). Human-readable.
-- `sources.json` — course manifest (`SourcesManifest`): source list, topic list, and chunk-count stats.
-
-**Eval generator** (`tools/dataset/src/generate-eval.ts`):
-Selects the highest-quality chunks (by `qualityScore`) across topics and calls Gemini (`generateJson`, `role:"fast"`) to draft Q&A items. Results are cached by chunk ID (`eval-gen|v1|{chunkId}`). Writes a validated `TestSetItem[]` to `tools/eval/testset.json`.
-
-Both scripts are in the `@sc/dataset` workspace, run via `npm run dataset:export [courseId]` and `npm run dataset:generate-eval [--count N]`. Output files are gitignored; `testset.json` is committed.
-
 ---
 
 ## 7. Shared contract (`packages/schemas`, imported as `@sc/schemas`)
@@ -327,7 +314,7 @@ Full details, examples and errors: [API_SPEC.md](API_SPEC.md). Postman: `docs/po
 
 ## 9. Evaluation
 
-*Planned:* `tools/eval/ragas.py` + `score.ts` + `tools/sim` from the teammate. *Built* (see §0):
+*Planned:* `tools/eval/ragas.py` + `score.ts` + `tools/sim` from the teammate. *Built* (see §0). Results: the `/evaluation` page (reports in `data/eval/`, validated against `RagReport` / `SimReport` in `@sc/schemas`; a report that fails validation is reported, never shown):
 
 - **Test sets:** `data/demo/testset.stage1.json` (team-built, with known page/slide/timestamp locations and off-material questions) plus the holdout set from the overfitting audit (`tools/e2e/holdout/`).
 - `npm run eval:rag` (`tools/e2e/src/eval-rag.ts`) calls `/api/eval/answer` and scores **faithfulness, answer relevancy, context precision, context recall** using the RAGAS definitions with a Gemini judge (cached), plus refusal precision.
@@ -409,13 +396,8 @@ curl localhost:3000/api/health
 | `npm run smoke [-- json pdf slides video embed]` | Gemini smoke test (all checks, or the named ones); prints today's usage |
 | `npm run stage1:pdf` | **Spends quota on first run:** ingest the real Stage-1 PDF and score it against the 47-fact ground truth; second run must cost 0 |
 | `npm run models:list` | List models available to `APP_GEMINI_API_KEY` |
-<<<<<<< Updated upstream
 | `npm run stage1:<name>` (`pdf`, `video`, `pptx`, `retrieval`, `build`, `tutor`, `quiz`, `grading`, `mastery`) | Real-data checks against pre-registered ground truth (spend quota only when inputs or prompts change; cached otherwise) |
 | `npm run eval:rag` / `npm run eval:sim` | RAGAS-definition metrics with a Gemini judge / simulated students (no LLM) |
-=======
-| `npm run dataset:export [courseId]` | Export chunks.jsonl, metadata.csv, sources.json to data/dataset/ |
-| `npm run dataset:generate-eval [-- --count N]` | Auto-generate eval Q&A pairs → tools/eval/testset.json |
->>>>>>> Stashed changes
 
 **Windows:** stop the dev server before `npm install` or `db:generate` (Prisma's engine DLL is locked while it runs).
 

@@ -2,8 +2,8 @@
 import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
 import type { NextRequest } from "next/server";
-import { getSourceFile, parseByteRange } from "@sc/core";
-import { handle } from "../../_lib/http";
+import { authorizeSource, getSourceFile, parseByteRange } from "@sc/core";
+import { handle, sessionOf } from "../../_lib/http";
 
 type Ctx = RouteContext<"/api/files/[id]">;
 
@@ -15,6 +15,7 @@ function contentDisposition(filename: string): string {
 
 async function serve(req: NextRequest, ctx: Ctx, withBody: boolean): Promise<Response> {
   const { id } = await ctx.params;
+  await authorizeSource(id, sessionOf(req));
   const file = await getSourceFile(id);
   const headers = new Headers({
     "Content-Type": file.mimeType,

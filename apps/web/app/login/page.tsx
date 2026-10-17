@@ -37,7 +37,7 @@ export default function LoginPage() {
     <main className="mx-auto w-full max-w-md px-4 py-16">
       <h1 className="font-display text-title text-ink">{mode === "login" ? "Sign in" : "Create your account"}</h1>
       <p className="mt-2 text-meta text-graphite">
-        Your account keeps your own tutor history, quizzes and mastery map. Course material is shared by everyone.
+        Your account has its own private course: the files you upload, your tutor history, quizzes and mastery map are visible only to you.
       </p>
       <form
         className="mt-8 space-y-5"
@@ -48,7 +48,8 @@ export default function LoginPage() {
           setError(null);
           try {
             await signIn(mode, name, password);
-            router.push(nextPath());
+            // New accounts set up their tutor first (onboarding), then continue.
+            router.push(mode === "signup" ? "/onboarding" : nextPath());
           } catch (err) {
             setError(errorText(err));
             setBusy(false);

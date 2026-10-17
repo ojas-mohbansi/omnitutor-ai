@@ -35,7 +35,7 @@ type Point = { step: number; p: number; at: string | null; source: string };
 function TopicTrend({ topic, events }: { topic: TopicMastery; events: MasteryPoint[] }) {
   const data: Point[] = [
     { step: 0, p: events[0].before, at: null, source: "start" },
-    ...events.map((e, i) => ({ step: i + 1, p: e.after, at: e.at, source: e.source === "QUIZ" ? "quiz answer" : "tutor chat" })),
+    ...events.map((e, i) => ({ step: i + 1, p: e.after, at: e.at, source: e.source === "QUIZ" ? "quiz answer" : e.source === "FLASHCARD" ? "flashcard" : "tutor chat" })),
   ];
   return (
     <div className="space-y-1">
@@ -82,12 +82,24 @@ export default function DashboardPage() {
   }, [learner]);
 
   if (error) return <main className="mx-auto w-full max-w-7xl p-8 text-proof">{error}</main>;
-  if (!view || !learner) return <main className="mx-auto w-full max-w-7xl p-8 text-graphite">Loading your mastery map…</main>;
+  if (!view || !learner) {
+    return (
+      <main className="mx-auto w-full max-w-7xl space-y-8 p-8" aria-busy="true" aria-label="Loading your mastery map">
+        <div className="h-10 w-72 animate-pulse rounded-card bg-surface" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="h-80 animate-pulse rounded-3xl bg-surface lg:col-span-2" />
+          <div className="h-80 animate-pulse rounded-3xl bg-surface" />
+        </div>
+        <div className="h-56 animate-pulse rounded-3xl bg-surface" />
+      </main>
+    );
+  }
 
   const assessed = view.topics.filter((t) => t.n > 0);
   const overall = assessed.length ? assessed.reduce((s, t) => s + t.p, 0) / assessed.length : null;
   const quizEvents = view.history.filter((h) => h.source === "QUIZ").length;
-  const chatEvents = view.history.length - quizEvents;
+  const chatEvents = view.history.filter((h) => h.source === "CHAT").length;
+  const cardEvents = view.history.filter((h) => h.source === "FLASHCARD").length;
   const nameOf = new Map(view.topics.map((t) => [t.topicId, t.name]));
   const recent = [...view.history].reverse().slice(0, 6);
 
@@ -95,7 +107,7 @@ export default function DashboardPage() {
     <main className="mx-auto w-full max-w-7xl space-y-12 p-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="font-display text-4xl font-bold tracking-tight text-ink">Academic Atelier</h1>
+          <h1 className="font-display text-4xl font-bold tracking-tight text-ink">Your progress</h1>
           <p className="font-body text-graphite">
             Welcome back, <span className="font-medium text-ink">{learner.name}</span>. Your mastery map updates after every quiz answer and tutor conversation.
           </p>
@@ -148,7 +160,7 @@ export default function DashboardPage() {
             )}
           </div>
           <StatCard label="Overall Mastery" value={overall === null ? "—" : pct(overall)} subvalue={`${assessed.length} of ${view.topics.length} topics assessed`} />
-          <StatCard label="Evidence" value={String(view.history.length)} subvalue={`${quizEvents} quiz answers · ${chatEvents} tutor turns`} />
+          <StatCard label="Evidence" value={String(view.history.length)} subvalue={`${quizEvents} quiz answers · ${chatEvents} tutor turns · ${cardEvents} flashcards`} />
         </div>
 
         <div className="col-span-12 space-y-6 lg:col-span-4">
@@ -201,7 +213,7 @@ export default function DashboardPage() {
               <ul className="space-y-3">
                 {recent.map((h, i) => (
                   <li key={i} className="flex items-center gap-3 text-sm">
-                    <span className="rounded bg-graphite/10 px-2 py-1 font-mono text-xs text-graphite">{h.source === "QUIZ" ? "Quiz" : "Chat"}</span>
+                    <span className="rounded bg-graphite/10 px-2 py-1 font-mono text-xs text-graphite">{h.source === "QUIZ" ? "Quiz" : h.source === "FLASHCARD" ? "Card" : "Chat"}</span>
                     <span className="min-w-0 flex-1 truncate font-medium text-ink">{nameOf.get(h.topicId) ?? "Topic"}</span>
                     <span className={`font-mono text-xs ${h.after >= h.before ? "text-verified" : "text-proof"}`}>{pct(h.before)} → {pct(h.after)}</span>
                   </li>

@@ -9,18 +9,6 @@ import type { ChunkDraft, IngestStats } from "./types";
 /** Bump when the schema or chunking contract changes. (Prompt text changes miss the cache automatically: its hash is in the key.) */
 export const PDF_PROMPT_VERSION = "pdf-page-v2";
 
-/**
- * Heuristic content richness score in [0, 1].
- * lengthScore: Math.min(1, content.length / 800) * 0.5
- * labelScore:  Math.min(1, conceptLabels.length / 6) * 0.5
- * Exported so pptx.ts and video.ts can import it (Requirements 2.4, 2.5).
- */
-export function heuristicQuality(content: string, conceptLabels: string[]): number {
-  const lengthScore = Math.min(1, content.length / 800) * 0.5;
-  const labelScore  = Math.min(1, conceptLabels.length / 6) * 0.5;
-  return Math.min(1, lengthScore + labelScore);
-}
-
 export const PdfPageExtraction = z.object({
   blocks: z.array(
     z.object({
@@ -63,12 +51,8 @@ export function pageChunks(page: number, ex: PdfPageExtraction): ChunkDraft[] {
   let groupTitle: string | null = null;
   let groupParts: string[] = [];
   let groupChars = 0;
-  let pageSection: string | null = null;
   const flush = () => {
-    if (groupParts.length) {
-      const content = groupParts.join("\n\n");
-      out.push({ kind: "TEXT", title: groupTitle, content, ...at(page), conceptLabels: labels, section: pageSection, language: "en", qualityScore: heuristicQuality(content, labels) });
-    }
+    if (groupParts.length) out.push({ kind: "TEXT", title: groupTitle, content: groupParts.join("\n\n"), ...at(page), conceptLabels: labels });
     groupTitle = null;
     groupParts = [];
     groupChars = 0;
@@ -77,10 +61,9 @@ export function pageChunks(page: number, ex: PdfPageExtraction): ChunkDraft[] {
     const content = b.content.trim();
     const title = b.title.trim() || null;
     if (!content) continue;
-    if (b.kind !== "figure" && title && pageSection === null) pageSection = title;
     if (b.kind === "figure") {
       flush(); // keep reading order: text before the figure stays before it
-      out.push({ kind: "FIGURE", title: title ?? "Figure", content, ...at(page), conceptLabels: labels, section: pageSection, language: "en", qualityScore: heuristicQuality(content, labels) });
+      out.push({ kind: "FIGURE", title: title ?? "Figure", content, ...at(page), conceptLabels: labels });
       continue;
     }
     const text = b.kind === "table" && title ? `${title}\n${content}` : content;

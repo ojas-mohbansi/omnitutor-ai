@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
-import { AccountControl, LearnerGate, LearnerProvider } from "@/components/learner";
+import { LearnerGate, LearnerProvider } from "@/components/learner";
+import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 /* Three voices, one job each:
@@ -30,12 +30,6 @@ export const metadata: Metadata = {
     "Upload a lecture video, a textbook chapter and a slide deck. Ask questions and get answers that cite the exact page, slide or timestamp, with verified adaptive quizzes and a per-topic mastery model.",
 };
 
-const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/tutor", label: "Tutor" },
-  { href: "/quiz", label: "Quiz" },
-  { href: "/sources", label: "Sources" },
-] as const;
 
 export default function RootLayout({
   children,
@@ -71,40 +65,9 @@ export default function RootLayout({
             content, so it costs no compositing work while scrolling. */}
         <div className="substrate" aria-hidden="true" />
 
-        <header className="sticky top-0 z-30 border-b border-rule bg-paper">
-          <div className="mx-auto flex h-14 w-full max-w-[68rem] items-center justify-between px-4 sm:px-6">
-            <Link href="/" className="group flex items-center gap-2.5">
-              {/* The pilcrow: the typographic mark for an annotated passage. */}
-              <span
-                aria-hidden="true"
-                className="locator flex h-6 w-6 items-center justify-center rounded-card bg-ink text-paper"
-              >
-                ¶
-              </span>
-              <span className="font-display text-lg font-semibold tracking-[-0.02em] text-ink">
-                Omnitutor
-              </span>
-            </Link>
-
-            <nav aria-label="Main" className="flex items-center gap-3">
-              <ul className="flex items-center gap-1 sm:gap-2">
-                {NAV_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="inline-flex min-h-6 items-center rounded-card px-2.5 py-1.5 text-meta text-graphite transition-colors duration-200 ease-ledger hover:bg-surface hover:text-ink sm:px-3"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Suspense fallback={<span className="h-8 w-20" aria-hidden="true" />}>
-                <AccountControl />
-              </Suspense>
-            </nav>
-          </div>
-        </header>
+        <Suspense fallback={<div className="h-16 border-b border-rule bg-paper" aria-hidden="true" />}>
+          <SiteHeader />
+        </Suspense>
 
         <div id="content" className="relative z-10 flex flex-1 flex-col">
           <Suspense fallback={<main className="mx-auto w-full max-w-3xl p-8 text-graphite">Loading…</main>}>

@@ -122,7 +122,7 @@ describe("eval test set", () => {
   it("duplicate ids rejected", () => bad(TestSet, [item("a", "off_material"), item("a", "off_material")]));
   it("composition gaps are reported", () => {
     const set = TestSet.parse([item("a", "pdf", { expected: pdfLoc, needsFigure: true }), item("b", "off_material")]);
-    assert.deepEqual(testSetGaps(set), ["pdf: 1/5", "pptx: 0/5", "video: 0/5", "off_material: 1/5", "needsFigure: 1/2", "hard: 0/2"]);
+    assert.deepEqual(testSetGaps(set), ["pdf: 1/5", "pptx: 0/5", "video: 0/5", "off_material: 1/5", "needsFigure: 1/2"]);
   });
 });
 

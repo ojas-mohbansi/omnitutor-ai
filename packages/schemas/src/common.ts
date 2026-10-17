@@ -19,7 +19,7 @@ export type AssessmentKind = z.infer<typeof AssessmentKind>;
 export const AssessmentStatus = z.enum(["IN_PROGRESS", "SUBMITTED"]);
 export type AssessmentStatus = z.infer<typeof AssessmentStatus>;
 
-export const MasterySource = z.enum(["QUIZ", "CHAT"]);
+export const MasterySource = z.enum(["QUIZ", "CHAT", "FLASHCARD"]);
 export type MasterySource = z.infer<typeof MasterySource>;
 
 export const ChatRole = z.enum(["USER", "ASSISTANT"]);

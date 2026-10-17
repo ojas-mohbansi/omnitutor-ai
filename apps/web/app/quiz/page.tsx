@@ -79,7 +79,7 @@ function QuizFlow() {
 
   if (phase === "setup" || phase === "generating") {
     return (
-      <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center bg-paper p-8 font-body">
+      <main className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-paper p-8 font-body">
         <div className="w-full max-w-3xl space-y-10">
           <div className="space-y-2 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-proof/10 text-proof">
@@ -147,7 +147,7 @@ function QuizFlow() {
     });
 
   return (
-    <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center bg-paper p-8 font-body">
+    <main className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-paper p-8 font-body">
       <div className="w-full max-w-3xl space-y-12">
         <div className="mx-auto flex max-w-md items-center justify-between">
           <span className="font-mono text-xs uppercase tracking-widest text-graphite">Question {idx + 1} of {n}</span>

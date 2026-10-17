@@ -10,7 +10,7 @@ import { PDFDocument } from "pdf-lib";
 import { prisma } from "@sc/db";
 import { AppError } from "../src/errors";
 import {
-  MAX_TEXT_CHARS, embedText, heuristicQuality, pageChunks, recoverInterruptedSources, requestIngestion, segmentChunks, splitPdf,
+  MAX_TEXT_CHARS, embedText, pageChunks, recoverInterruptedSources, requestIngestion, splitPdf,
   type ExtractPage, type ExtractSlides, type PdfPageExtraction,
 } from "../src/ingest/index";
 import { listSources, uploadSource } from "../src/sources";
@@ -32,31 +32,6 @@ const ex = (blocks: PdfPageExtraction["blocks"], conceptLabels: string[] = []): 
 const t = (content: string, title = "") => ({ kind: "text" as const, title, content });
 const fig = (content: string, title = "") => ({ kind: "figure" as const, title, content });
 
-describe("heuristicQuality", () => {
-  it("empty content and no labels → 0", () => {
-    assert.strictEqual(heuristicQuality("", []), 0);
-  });
-  it("very long content with 6+ labels → 1", () => {
-    const score = heuristicQuality("x".repeat(1600), ["a","b","c","d","e","f","g"]);
-    assert.strictEqual(score, 1);
-  });
-  it("midpoint: 400-char content, 3 labels → 0.5", () => {
-    const score = heuristicQuality("x".repeat(400), ["a","b","c"]);
-    assert.ok(Math.abs(score - 0.5) < 0.001, `expected ~0.5, got ${score}`);
-  });
-  it("always returns a value in [0, 1] — property test", () => {
-    // Deterministic property check (no fast-check needed for the spec; fast-check added in 2.6)
-    const cases: [string, string[]][] = [
-      ["", []], ["a", []], ["", ["x"]], ["x".repeat(2000), ["a","b","c","d","e","f","g","h"]],
-      ["medium length content here", ["concept1","concept2"]],
-    ];
-    for (const [content, labels] of cases) {
-      const score = heuristicQuality(content, labels);
-      assert.ok(score >= 0 && score <= 1, `score ${score} out of [0,1] for content.length=${content.length} labels.length=${labels.length}`);
-    }
-  });
-});
-
 describe("pageChunks (pure)", () => {
   it("groups text, keeps each figure separate, preserves reading order", () => {
     const c = pageChunks(5, ex([t("Intro", "Dispatcher"), t("- switching context"), fig("Diagram: ready -> running", "Process states"), t("After the figure")], ["dispatcher", " dispatcher ", "context switch"]));
@@ -73,23 +48,6 @@ describe("pageChunks (pure)", () => {
     const long = "x".repeat(MAX_TEXT_CHARS - 10);
     assert.equal(pageChunks(1, ex([t(long), t("y".repeat(50))])).length, 2);
   });
-  it("new fields: section from first titled text block, language='en', qualityScore in [0,1]", () => {
-    // Page with a titled first text block → section = that title
-    const c1 = pageChunks(1, ex([t("Intro paragraph", "Section Heading"), t("More text"), fig("Diagram", "Fig1")], ["scheduling"]));
-    assert.equal(c1[0].section, "Section Heading");
-    assert.equal(c1[0].language, "en");
-    assert.ok(c1[0].qualityScore !== null && c1[0].qualityScore >= 0 && c1[0].qualityScore <= 1);
-    // FIGURE inherits the same pageSection
-    const figChunk = c1.find(c => c.kind === "FIGURE");
-    assert.equal(figChunk?.section, "Section Heading");
-    assert.equal(figChunk?.language, "en");
-    assert.ok(figChunk?.qualityScore !== null && (figChunk?.qualityScore ?? -1) >= 0 && (figChunk?.qualityScore ?? 2) <= 1);
-
-    // Page with NO titled text block → section = null
-    const c2 = pageChunks(2, ex([t("No heading here"), t("Also no heading")]));
-    assert.equal(c2[0].section, null);
-    assert.equal(c2[0].language, "en");
-  });
   it("embedText = title + newline + content", () => {
     assert.equal(embedText({ title: "Dispatcher", content: "gives the CPU" }), "Dispatcher\ngives the CPU");
     assert.equal(embedText({ title: null, content: "plain" }), "plain");
@@ -101,25 +59,6 @@ describe("splitPdf", () => {
     const pages = await splitPdf(await makePdf(3));
     assert.equal(pages.length, 3);
     for (const p of pages) assert.equal((await PDFDocument.load(p)).getPageCount(), 1);
-  });
-});
-
-describe("segmentChunks section passthrough (Property 2)", () => {
-  it("section equals trimmed title when non-empty; null when empty/whitespace", () => {
-    const cases: [string, string | null][] = [
-      ["CPU Scheduling", "CPU Scheduling"],
-      ["  Trimmed title  ", "Trimmed title"],
-      ["", null],
-      ["   ", null],
-    ];
-    for (const [rawTitle, expectedSection] of cases) {
-      const seg = { tStart: 0, tEnd: 30, title: rawTitle, transcript: "some transcript", onScreen: "on screen text", conceptLabels: ["scheduling"] };
-      const chunks = segmentChunks([seg]);
-      assert.equal(chunks.length, 1);
-      assert.equal(chunks[0].section, expectedSection, `title "${rawTitle}" should produce section=${JSON.stringify(expectedSection)}`);
-      assert.equal(chunks[0].language, "en");
-      assert.ok(chunks[0].qualityScore !== null && (chunks[0].qualityScore ?? -1) >= 0 && (chunks[0].qualityScore ?? 2) <= 1);
-    }
   });
 });
 

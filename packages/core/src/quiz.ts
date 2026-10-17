@@ -15,6 +15,7 @@ import { requireCourse } from "./course";
 import { AppError, badRequest, notFound, notReady } from "./errors";
 import { requireLearner } from "./learners";
 import { generateJson, type Usage } from "./llm";
+import { stripExcerptRefs as clean } from "./text";
 
 export const MOCK_QUESTIONS = 10;
 export const DEFAULT_QUIZ_QUESTIONS = 5;
@@ -103,7 +104,8 @@ Return JSON { questions: [...] }, one entry per requested slot. Fields:
 - NUMERIC: a calculation using numbers and formulas that appear in the excerpts (you may change the input numbers). numericAnswer = the exact result, unit = its unit or "". If the excerpts of that topic contain nothing to calculate, write an MCQ instead.
 - SHORT: a question answered in 1-3 sentences. keyPoints = 2-4 points a correct answer must contain.
 - referenceAnswer: the correct answer in words (for NUMERIC include the working).
-- explanation: why the answer is right, in terms of the excerpts.
+- explanation: why the answer is right, in terms of what the material says.
+Never mention excerpt ids (C1, C2, ...) in any text a student reads (stem, options, answers, explanation, key points); put them only in "sources".
 - sources: ids of the excerpts the question is based on (at least one).
 Unused fields: options [], correctOption -1, distractorMisconceptions [], numericAnswer 0, unit "", keyPoints [].
 
@@ -273,11 +275,11 @@ export async function createQuizWithReport(req: CreateQuizRequest): Promise<{ qu
   const extraRejected = verified.filter((q) => !kept.includes(q));
   const row = (q: Candidate, position: number | null, isVerified: boolean, verifier: unknown) => ({
     topicId: q.topicId, assessmentId: position === null ? null : assessment.id, position, type: q.type, difficulty: Math.min(3, Math.max(1, q.difficulty)),
-    stem: q.stem.trim(), stemHash: q.hash,
-    options: q.type === "MCQ" ? q.options.map((o) => o.trim()) : undefined,
-    answer: q.type === "MCQ" ? { index: q.correctOption } : q.type === "NUMERIC" ? { value: q.numericAnswer, unit: q.unit || undefined } : { reference: q.referenceAnswer, keyPoints: q.keyPoints },
-    distractorMisconceptions: q.type === "MCQ" ? Object.fromEntries(q.distractorMisconceptions.filter((d) => d.option !== q.correctOption && d.option >= 0 && d.option < 4).map((d) => [String(d.option), d.misconception])) : undefined,
-    explanation: q.explanation, sourceChunkIds: q.chunkIds, verified: isVerified, verifierAnswer: (verifier ?? undefined) as object | undefined,
+    stem: clean(q.stem.trim()), stemHash: q.hash,
+    options: q.type === "MCQ" ? q.options.map((o) => clean(o.trim())) : undefined,
+    answer: q.type === "MCQ" ? { index: q.correctOption } : q.type === "NUMERIC" ? { value: q.numericAnswer, unit: q.unit || undefined } : { reference: clean(q.referenceAnswer), keyPoints: q.keyPoints.map(clean) },
+    distractorMisconceptions: q.type === "MCQ" ? Object.fromEntries(q.distractorMisconceptions.filter((d) => d.option !== q.correctOption && d.option >= 0 && d.option < 4).map((d) => [String(d.option), clean(d.misconception)])) : undefined,
+    explanation: clean(q.explanation), sourceChunkIds: q.chunkIds, verified: isVerified, verifierAnswer: (verifier ?? undefined) as object | undefined,
   });
   await prisma.question.createMany({
     data: [
@@ -304,8 +306,8 @@ export async function getQuiz(assessmentId: string): Promise<Quiz> {
   });
   if (!a) throw notFound(`Quiz "${assessmentId}" not found.`);
   const questions: QuizQuestion[] = a.questions.map((q) => {
-    const base = { id: q.id, position: q.position ?? 0, topicId: q.topicId, topicName: q.topic.name, difficulty: q.difficulty, stem: q.stem };
-    if (q.type === "MCQ") return { ...base, type: "MCQ", options: q.options as string[] };
+    const base = { id: q.id, position: q.position ?? 0, topicId: q.topicId, topicName: q.topic.name, difficulty: q.difficulty, stem: clean(q.stem) };
+    if (q.type === "MCQ") return { ...base, type: "MCQ", options: (q.options as string[]).map(clean) };
     if (q.type === "NUMERIC") return { ...base, type: "NUMERIC", unit: ((q.answer as { unit?: string }).unit ?? null) || null };
     return { ...base, type: "SHORT" };
   });

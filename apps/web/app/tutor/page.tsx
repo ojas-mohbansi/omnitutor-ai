@@ -1,5 +1,6 @@
 "use client";
-import type { ChatMessageView, Citation, Coverage, MasteryUpdate, TutorBlock } from "@sc/schemas";
+import type { ChatMessageView, Citation, Coverage, LearnerProfile, MasteryUpdate, TutorBlock } from "@sc/schemas";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CitationViewer } from "@/components/citation-viewer";
 import { BookOpenIcon } from "@/components/icons";
@@ -14,6 +15,8 @@ const COVERAGE: Record<Coverage, { label: string; className: string }> = {
 };
 
 type Message = ChatMessageView & { updates?: MasteryUpdate[] };
+
+const TONE_LABEL: Record<LearnerProfile["tone"], string> = { friendly: "😊 Friendly tutor", funny: "😂 Funny tutor", serious: "🎓 Serious tutor", concise: "⚡ Concise tutor" };
 
 function Block({ block, onCite, active }: { block: TutorBlock; onCite: (c: Citation) => void; active: Citation | null }) {
   if (block.origin === "outside") {
@@ -45,12 +48,18 @@ function Block({ block, onCite, active }: { block: TutorBlock; onCite: (c: Citat
 
 export default function TutorPage() {
   const { learner } = useLearner();
+  const [profile, setProfile] = useState<LearnerProfile | null | undefined>(undefined);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<Citation | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!learner) return;
+    api.getProfile().then((v) => setProfile(v.profile)).catch(() => setProfile(null));
+  }, [learner]);
 
   // The learner only changes by signing out, which unmounts this page (LearnerGate): no reset needed.
   useEffect(() => {
@@ -94,20 +103,23 @@ export default function TutorPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden bg-paper">
+    <div className="flex h-[calc(100dvh-4rem)] overflow-hidden bg-paper">
       {/* Chat area */}
       <section className="flex h-full w-full flex-col border-r border-rule lg:w-[60%]">
         <header className="flex items-center justify-between border-b border-rule bg-surface p-6">
           <div>
             <h1 className="font-display text-xl font-bold text-ink">Personal Tutor</h1>
             <p className="font-mono text-xs uppercase tracking-widest text-graphite">
-              {learner ? `${learner.name} · answers only from your sources` : "Pick a learner"}
+              {learner ? `${learner.name} · teaches from your sources` : "Sign in"}
             </p>
           </div>
-          <span className="flex items-center gap-2 rounded-full bg-proof/10 px-3 py-1 text-xs font-bold text-proof" title="Explanations adapt to your per-topic mastery; what you say updates it.">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-proof" />
-            Adaptive Mode
-          </span>
+          {profile === undefined ? null : profile ? (
+            <Link href="/onboarding" className="flex items-center gap-2 rounded-full bg-proof/10 px-3 py-1 text-xs font-bold text-proof hover:bg-proof/20" title="Your tutor's voice and explanations follow your onboarding answers; depth follows your measured mastery. Click to change.">
+              {TONE_LABEL[profile.tone]} · change
+            </Link>
+          ) : (
+            <Link href="/onboarding" className="rounded-full bg-proof px-3 py-1 text-xs font-bold text-white hover:opacity-90">Set up your tutor →</Link>
+          )}
         </header>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-6">

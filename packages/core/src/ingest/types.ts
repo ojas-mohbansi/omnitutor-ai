@@ -10,9 +10,6 @@ export type ChunkDraft = {
   tStart: number | null;
   tEnd: number | null;
   conceptLabels: string[];
-  section: string | null;
-  language: string;
-  qualityScore: number | null;
 };
 
 /** units = pages (PDF) or steps (video: upload, extract). */

@@ -9,7 +9,6 @@ import { z } from "zod";
 import { sha256 } from "../cache";
 import { generateJson, type Usage } from "../llm";
 import type { ChunkDraft, IngestStats } from "./types";
-import { heuristicQuality } from "./pdf";
 
 /** Bump when the schema or chunking contract changes. (Prompt text changes miss the cache automatically: its hash is in the key.) */
 export const PPTX_PROMPT_VERSION = "pptx-batch-v1";
@@ -294,7 +293,7 @@ export function slideChunk(s: ParsedSlide, ex?: Pick<SlideExtraction, "figures" 
   for (const reason of s.omitted) parts.push(`[Figure omitted: ${reason}]`);
   const content = parts.join("\n\n") || s.title!;
   const conceptLabels = [...new Set((ex?.conceptLabels ?? []).map((l) => l.trim()).filter(Boolean))].slice(0, 5);
-  return { kind: "SLIDE", title: s.title, content, page: null, slide: s.slide, tStart: null, tEnd: null, conceptLabels, section: s.title ?? null, language: "en", qualityScore: heuristicQuality(content, conceptLabels) };
+  return { kind: "SLIDE", title: s.title, content, page: null, slide: s.slide, tStart: null, tEnd: null, conceptLabels };
 }
 
 export type DeckReport = { slides: number; batches: number; imagesSent: number; skippedImages: SkippedImage[]; emptySlides: number[] };

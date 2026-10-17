@@ -11,7 +11,7 @@ import { AppError } from "../src/errors";
 import { submitQuiz } from "../src/grading";
 import { requestIngestion, type ExtractPage } from "../src/ingest/index";
 import { ApiError } from "@google/genai";
-import { isKeyRejected, requestTimeoutMs } from "../src/llm";
+import { fallbackModel, isFileAccessDenied, isKeyRejected, requestTimeoutMs } from "../src/llm";
 import { uploadSource } from "../src/sources";
 import { chunked, makePdf } from "../src/testing";
 import { chat } from "../src/tutor";
@@ -43,6 +43,16 @@ describe("requestTimeoutMs", () => {
   });
 });
 
+describe("fallbackModel", () => {
+  it("never falls back to the same (overloaded) model", () => {
+    const env = { LLM_MODEL_FAST: "lite-a", LLM_MODEL_VERIFY: "lite-b" };
+    assert.equal(fallbackModel("lite-a", env), "lite-b");
+    assert.equal(fallbackModel("lite-b", env), "lite-a");
+    assert.equal(fallbackModel("lite-a", { ...env, LLM_MODEL_FALLBACK: "other" }), "other");
+    assert.equal(fallbackModel("lite-a", { LLM_MODEL_FAST: "lite-a" }), undefined);
+  });
+});
+
 describe("isKeyRejected (rotate to the next key instead of failing)", () => {
   it("invalid/expired keys and 401/403 are key problems; quota, overload and bad requests are not", () => {
     const err = (status: number, message: string) => new ApiError({ status, message });
@@ -52,6 +62,12 @@ describe("isKeyRejected (rotate to the next key instead of failing)", () => {
     assert.ok(isKeyRejected(err(401, "UNAUTHENTICATED")));
     for (const [status, msg] of [[400, "Invalid JSON payload"], [429, "RESOURCE_EXHAUSTED"], [503, "overloaded"]] as const) assert.ok(!isKeyRejected(err(status, msg)), msg);
     assert.ok(!isKeyRejected(new Error("API key not valid")));
+  });
+  it("a 403 on an uploaded file is a file-access problem (other project's key), never a rejected key", () => {
+    const denied = new ApiError({ status: 403, message: '{"error":{"code":403,"message":"You do not have permission to access the File abc123 or it may not exist.","status":"PERMISSION_DENIED"}}' });
+    assert.ok(isFileAccessDenied(denied));
+    assert.ok(!isKeyRejected(denied));
+    assert.ok(!isFileAccessDenied(new ApiError({ status: 403, message: "PERMISSION_DENIED" })));
   });
 });
 

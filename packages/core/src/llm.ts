@@ -22,10 +22,11 @@ export function geminiKeys(env: NodeJS.ProcessEnv = process.env): string[] {
   return [...new Set(all)];
 }
 
-function getClient(): GoogleGenAI {
+/** Client for key `index` (default: the current key). */
+function getClient(index: number = keyIndex): GoogleGenAI {
   const keys = geminiKeys();
   if (keys.length === 0) throw new LlmError("config", "No Gemini key: set APP_GEMINI_API_KEY (or APP_GEMINI_API_KEYS) in .env");
-  const key = keys[keyIndex % keys.length];
+  const key = keys[index % keys.length];
   let c = clients.get(key);
   if (!c) {
     c = new GoogleGenAI({ apiKey: key });
@@ -58,14 +59,25 @@ export function modelFor(role: ModelRole): string {
   return envModel(role === "fast" ? "LLM_MODEL_FAST" : "LLM_MODEL_STRONG");
 }
 
+/**
+ * A Files API file belongs to the project of the key that uploaded it; another key gets 403
+ * "You do not have permission to access the File … or it may not exist". That is not a bad key.
+ */
+export function isFileAccessDenied(e: unknown): boolean {
+  return e instanceof ApiError && (e.status === 403 || e.status === 404) && /\bfile\b/i.test(e.message) && /permission|not exist|not found/i.test(e.message);
+}
+
 /** Google refused the key itself (invalid, revoked, or not allowed for this model/project). */
 export function isKeyRejected(e: unknown): boolean {
-  if (!(e instanceof ApiError)) return false;
+  if (!(e instanceof ApiError) || isFileAccessDenied(e)) return false;
   return e.status === 401 || e.status === 403 || (e.status === 400 && /API_KEY_INVALID|API key not valid|API key expired/i.test(e.message));
 }
 
 function toLlmError(e: unknown): LlmError {
   if (e instanceof LlmError) return e;
+  if (isFileAccessDenied(e)) {
+    return new LlmError("file", `The uploaded video isn't available to this Gemini key (HTTP ${(e as ApiError).status}); run ingest again to re-upload it.`, e);
+  }
   if (isKeyRejected(e)) {
     const reason = /API_KEY_INVALID|not valid/i.test((e as ApiError).message) ? "invalid" : /expired/i.test((e as ApiError).message) ? "expired" : "not permitted";
     return new LlmError("config", `Gemini rejected the API key (HTTP ${(e as ApiError).status}, ${reason}). Check APP_GEMINI_API_KEY / APP_GEMINI_API_KEYS in .env.`, e);
@@ -116,6 +128,8 @@ async function limited<T>(
   requests: number,
   estTokens: number,
   call: () => Promise<{ value: T; inputTokens?: number }>,
+  /** Calls that use an uploaded file must stay on the key that uploaded it: no rotation. */
+  pinned = false,
 ): Promise<T> {
   let rotations = 0;
   for (let attempt = 1; ; attempt++) {
@@ -129,14 +143,14 @@ async function limited<T>(
       reservation.settle();
       const err = toLlmError(e);
       // A rejected key (revoked, invalid): try the next configured key before giving up.
-      if (isKeyRejected(e) && rotations < geminiKeys().length - 1 && rotateKey(usedKey)) {
+      if (!pinned && isKeyRejected(e) && rotations < geminiKeys().length - 1 && rotateKey(usedKey)) {
         rotations++;
         attempt--;
         continue;
       }
       if (err.kind === "rate_limit" && err.cause !== "local-limit") {
         // Another key first (no waiting), then Google's suggested delay.
-        if (rotations < geminiKeys().length - 1 && rotateKey(usedKey)) {
+        if (!pinned && rotations < geminiKeys().length - 1 && rotateKey(usedKey)) {
           rotations++;
           attempt--;
           continue;
@@ -149,10 +163,10 @@ async function limited<T>(
       // Transient server/network failure (5xx, "overloaded", fetch failed): one retry.
       const status = e instanceof ApiError ? e.status : undefined;
       // 503 "high demand" spikes get more patience (and the other key) than other 5xx.
-      const maxAttempts = status === 503 ? 3 : 2;
+      const maxAttempts = status === 503 ? 4 : 2;
       if (err.kind === "api" && attempt < maxAttempts && (status === undefined || status >= 500)) {
-        if (status === 503) rotateKey(usedKey);
-        await sleep(attempt === 1 ? 2_000 : 5_000);
+        if (status === 503 && !pinned) rotateKey(usedKey);
+        await sleep([2_000, 5_000, 10_000][attempt - 1] ?? 10_000);
         continue;
       }
       throw err;
@@ -191,6 +205,8 @@ export async function generateJson<S extends z.ZodType>(opts: {
   cacheKey?: string;
   /** Override the input-token estimate (required for long videos). */
   estimatedInputTokens?: number;
+  /** Use exactly this key (UploadedFile.keyIndex) and never rotate: required when `parts` reference an uploaded file. */
+  keyIndex?: number;
 }): Promise<{ data: z.infer<S>; usage: Usage; cached: boolean }> {
   const primary = modelFor(opts.role);
   try {
@@ -198,7 +214,7 @@ export async function generateJson<S extends z.ZodType>(opts: {
   } catch (e) {
     // The model is overloaded (5xx) or out of quota/unavailable on every key (429/404) after retries:
     // answer with the fallback model rather than fail. The limiter's own stops are never bypassed.
-    const fallback = process.env.LLM_MODEL_FALLBACK?.trim() || process.env.LLM_MODEL_FAST?.trim();
+    const fallback = fallbackModel(primary);
     const status = e instanceof LlmError && e.cause instanceof ApiError ? e.cause.status : undefined;
     const retryable = status !== undefined && (status >= 500 || status === 429 || status === 404);
     if (!fallback || fallback === primary || !retryable) throw e;
@@ -207,9 +223,19 @@ export async function generateJson<S extends z.ZodType>(opts: {
   }
 }
 
+/**
+ * The model to use when `primary` is overloaded or unavailable: LLM_MODEL_FALLBACK, else another
+ * configured model (VERIFY, then FAST) that differs from `primary` (falling back to the same model
+ * would just hit the same overload). Undefined when there is none.
+ */
+export function fallbackModel(primary: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const candidates = [env.LLM_MODEL_FALLBACK, env.LLM_MODEL_VERIFY, env.LLM_MODEL_FAST].map((m) => m?.trim()).filter((m): m is string => !!m);
+  return candidates.find((m) => m !== primary);
+}
+
 async function generateWith<S extends z.ZodType>(
   model: string,
-  opts: { schema: S; parts: Part[]; system?: string; temperature?: number; cacheKey?: string; estimatedInputTokens?: number },
+  opts: { schema: S; parts: Part[]; system?: string; temperature?: number; cacheKey?: string; estimatedInputTokens?: number; keyIndex?: number },
 ): Promise<{ data: z.infer<S>; usage: Usage; cached: boolean }> {
   const responseJsonSchema = geminiJsonSchema(opts.schema);
   const fullKey = opts.cacheKey && generateCacheKey(model, opts.schema, opts.cacheKey);
@@ -224,13 +250,13 @@ async function generateWith<S extends z.ZodType>(
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt > 0) await sleep(1000);
     const res = await limited("generate", 1, est, async () => {
-      const r = await getClient().models.generateContent({
+      const r = await getClient(opts.keyIndex).models.generateContent({
         model,
         contents: [{ role: "user", parts: opts.parts }],
         config: { systemInstruction: opts.system, temperature: opts.temperature, responseMimeType: "application/json", responseJsonSchema, httpOptions: { timeout: requestTimeoutMs() } },
       });
       return { value: r, inputTokens: r.usageMetadata?.promptTokenCount };
-    });
+    }, opts.keyIndex !== undefined);
     const usage: Usage = {
       inputTokens: res.usageMetadata?.promptTokenCount ?? 0,
       outputTokens: res.usageMetadata?.candidatesTokenCount ?? 0,
@@ -319,7 +345,8 @@ export async function embed(texts: string[], taskType: EmbedTask): Promise<numbe
   return out as number[][];
 }
 
-export type UploadedFile = { name: string; uri: string; mimeType: string; expiresAt: Date | null };
+/** `keyIndex`: the key that uploaded it. Only that key's project can read the file. */
+export type UploadedFile = { name: string; uri: string; mimeType: string; expiresAt: Date | null; keyIndex: number };
 
 /** Uploads a local file to the Gemini Files API and waits until it is ACTIVE (not a generate request). */
 export async function uploadFile(
@@ -327,7 +354,8 @@ export async function uploadFile(
   mimeType: string,
   { timeoutMs = 5 * 60_000 } = {},
 ): Promise<UploadedFile> {
-  const ai = getClient();
+  const uploader = keyIndex % Math.max(1, geminiKeys().length);
+  const ai = getClient(uploader);
   try {
     let file = await ai.files.upload({ file: path, config: { mimeType } });
     const deadline = Date.now() + timeoutMs;
@@ -339,15 +367,15 @@ export async function uploadFile(
     if (file.state !== FileState.ACTIVE || !file.uri || !file.name) {
       throw new LlmError("file", `file ${file.name} ended in state ${file.state}`);
     }
-    return { name: file.name, uri: file.uri, mimeType: file.mimeType ?? mimeType, expiresAt: file.expirationTime ? new Date(file.expirationTime) : null };
+    return { name: file.name, uri: file.uri, mimeType: file.mimeType ?? mimeType, expiresAt: file.expirationTime ? new Date(file.expirationTime) : null, keyIndex: uploader };
   } catch (e) {
     throw toLlmError(e);
   }
 }
 
-export async function deleteFile(name: string): Promise<void> {
+export async function deleteFile(name: string, index?: number): Promise<void> {
   try {
-    await getClient().files.delete({ name });
+    await getClient(index).files.delete({ name });
   } catch (e) {
     throw toLlmError(e);
   }

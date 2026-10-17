@@ -32,10 +32,10 @@ describe("groundAnswer (server-side guards)", () => {
     const g = groundAnswer(out({ blocks: [{ origin: "material", text: "A", citations: ["C1"] }, { origin: "outside", text: "Background", citations: ["C2"] }, { origin: "outside", text: "  ", citations: [] }] }), retrieved, NOTE);
     assert.deepEqual(g.blocks.map((b) => [b.origin, b.citations.length]), [["material", 1], ["outside", 0]]);
   });
-  it("NOT_COVERED → refused (not_covered): refusal note first, material removed, outside kept as flagged", () => {
+  it("NOT_COVERED → refused (not_covered): only the refusal note; no material and no outside teaching", () => {
     const g = groundAnswer(out({ coverage: "NOT_COVERED", blocks: [{ origin: "material", text: "Sneaky", citations: ["C1"] }, { origin: "outside", text: "General idea", citations: [] }] }), retrieved, NOTE);
     assert.deepEqual([g.refused, g.refusalReason, g.coverage], [true, "not_covered", "NOT_COVERED"]);
-    assert.deepEqual(g.blocks.map((b) => [b.origin, b.text]), [["outside", NOTE], ["outside", "General idea"]]);
+    assert.deepEqual(g.blocks.map((b) => [b.origin, b.text]), [["outside", NOTE]]);
     valid(g);
   });
   it("SUPPORTED but nothing actually cited → refused (the model can't claim support without evidence)", () => {

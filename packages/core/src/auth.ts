@@ -10,8 +10,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { prisma, type Learner as LearnerRow } from "@sc/db";
 import type { Credentials, Learner } from "@sc/schemas";
-import { AppError, badRequest, notFound } from "./errors";
+import { requireCourse } from "./course";
+import { AppError, badRequest, notFound, notReady } from "./errors";
 import { repoRoot } from "./storage";
+
+/** Name of the empty notebook every new account starts with (renamed by creating named ones). */
+export const FIRST_NOTEBOOK_NAME = "My first notebook";
 
 export const SESSION_COOKIE = "omnitutor_session";
 export const SESSION_TTL_S = 7 * 24 * 3600;
@@ -109,4 +113,51 @@ export async function authorizeLearner(learnerId: string, sessionLearnerId: stri
 export async function authorizeAssessment(assessmentId: string, sessionLearnerId: string | null): Promise<void> {
   const a = await prisma.assessment.findUnique({ where: { id: assessmentId }, select: { learnerId: true } });
   if (a) await authorizeLearner(a.learnerId, sessionLearnerId);
+}
+
+/**
+ * Course privacy: each account has its own course (created on first use); everything uploaded,
+ * built, asked or quizzed while signed in lives there. A course is accessible exactly when its owner
+ * is the session's learner (ownerless shared courses: only without a session, i.e. tools and tests).
+ * Returns the course id to use for this request.
+ */
+export async function courseFor(sessionLearnerId: string | null, requested?: string): Promise<string> {
+  if (requested) {
+    const course = await prisma.course.findUnique({ where: { id: requested }, select: { ownerId: true } });
+    if (!course) throw notReady(`Course "${requested}" not found.`);
+    if ((course.ownerId ?? null) !== sessionLearnerId) throw unauthorized("This course belongs to another account.");
+    return requested;
+  }
+  if (!sessionLearnerId) return requireCourse();
+  return ownCourse(sessionLearnerId);
+}
+
+/**
+ * The account's active notebook (an owned Course). The stored pointer is validated on every read; if
+ * it is missing or stale the newest owned notebook becomes active, and an account with none gets an
+ * empty first notebook named FIRST_NOTEBOOK_NAME. A per-account advisory lock makes two
+ * first requests at once create one notebook, not two.
+ */
+export async function ownCourse(learnerId: string): Promise<string> {
+  const learner = await prisma.learner.findUnique({ where: { id: learnerId }, select: { passwordHash: true, activeCourseId: true } });
+  if (!learner?.passwordHash) throw unauthorized("Your session has expired. Sign in again.");
+  if (learner.activeCourseId) {
+    const active = await prisma.course.findFirst({ where: { id: learner.activeCourseId, ownerId: learnerId }, select: { id: true } });
+    if (active) return active.id;
+  }
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${learnerId}))`;
+    const newest = await tx.course.findFirst({ where: { ownerId: learnerId }, orderBy: { createdAt: "desc" }, select: { id: true } });
+    // A clean, generic first notebook: nothing is inherited from the shared evaluation course.
+    const name = FIRST_NOTEBOOK_NAME;
+    const id = newest?.id ?? (await tx.course.create({ data: { name, ownerId: learnerId }, select: { id: true } })).id;
+    await tx.learner.update({ where: { id: learnerId }, data: { activeCourseId: id } });
+    return id;
+  });
+}
+
+/** Source routes (delete, ingest, file): the source's course must be accessible to this session (unknown source → the service's 404). */
+export async function authorizeSource(sourceId: string, sessionLearnerId: string | null): Promise<void> {
+  const source = await prisma.source.findUnique({ where: { id: sourceId }, select: { course: { select: { ownerId: true } } } });
+  if (source && (source.course.ownerId ?? null) !== sessionLearnerId) throw unauthorized("This file belongs to another account.");
 }

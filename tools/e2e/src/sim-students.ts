@@ -8,10 +8,10 @@
 // the learner model, not question generation.
 // Usage: npm run eval:sim   (dev/prod server running: topic names + prerequisites come from GET /api/topics)
 import { REPO_ROOT, api, requireServer } from "./setup";
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { BKT, allocate, difficultyFor, updateMastery } from "@sc/core";
-import type { QuestionType } from "@sc/schemas";
+import { BKT, EVAL_DIR, SIM_REPORT_FILE, allocate, difficultyFor, updateMastery } from "@sc/core";
+import { SimReport, type QuestionType } from "@sc/schemas";
 
 // ── simulated-student parameters (deliberately different from the app's BKT: prior .3, learn .15, slip .1, guess .25/.1/.05)
 const SIM = {
@@ -116,7 +116,7 @@ const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 console.log(`topics: ${topics.map((t) => t.name).join(" → ")} · pool ${pool.length} items · ${SESSIONS} sessions × ${PER_SESSION} questions · ${STUDENTS_PER_PROFILE} students per profile and policy\n`);
 console.log("| Profile | Policy | True mastery gain (topics learned) | Estimation error (MAE) after s1 → s3 | Repetition rate |");
 console.log("|---|---|---|---|---|");
-const table: Record<string, unknown>[] = [];
+const table: { profile: string; policy: Policy; gain: number; gainSd: number; maeFirst: number; maeLast: number; repetition: number }[] = [];
 for (const [profile, byPolicy] of Object.entries(results)) {
   for (const policy of ["adaptive", "random"] as Policy[]) {
     const a = byPolicy[policy];
@@ -128,5 +128,16 @@ for (const [profile, byPolicy] of Object.entries(results)) {
 }
 const overall = (policy: Policy, k: "gain" | "repetition") => mean(Object.values(results).flatMap((r) => r[policy][k]));
 console.log(`\noverall: adaptive gain ${pct(overall("adaptive", "gain"))} vs random ${pct(overall("random", "gain"))} · repetition adaptive ${pct(overall("adaptive", "repetition"))} vs random ${pct(overall("random", "repetition"))}`);
-await writeFile(path.join(REPO_ROOT, "data/demo/sim-report.json"), JSON.stringify({ ranAt: new Date().toISOString(), params: { SIM, SESSIONS, PER_SESSION, STUDENTS_PER_PROFILE, ITEMS_PER_TOPIC, appBkt: BKT }, topics, table }, null, 2));
-console.log("full report: data/demo/sim-report.json");
+const report = SimReport.parse({
+  ranAt: new Date().toISOString(),
+  params: { sessions: SESSIONS, questionsPerSession: PER_SESSION, studentsPerProfile: STUDENTS_PER_PROFILE, itemsPerTopic: ITEMS_PER_TOPIC, simulatedStudent: SIM, appModel: BKT },
+  topics: topics.map((t) => t.name),
+  rows: table,
+  overall: {
+    adaptive: { gain: overall("adaptive", "gain"), repetition: overall("adaptive", "repetition") },
+    random: { gain: overall("random", "gain"), repetition: overall("random", "repetition") },
+  },
+});
+await mkdir(path.join(REPO_ROOT, EVAL_DIR), { recursive: true });
+await writeFile(path.join(REPO_ROOT, EVAL_DIR, SIM_REPORT_FILE), JSON.stringify(report, null, 2));
+console.log(`full report: ${EVAL_DIR}/${SIM_REPORT_FILE}`);

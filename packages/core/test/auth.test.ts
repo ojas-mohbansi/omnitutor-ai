@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 import { prisma } from "@sc/db";
 import {
-  authorizeAssessment, authorizeLearner, hashPassword, login, readSession, sessionLearner, signSession, signup, verifyPassword,
+  authorizeAssessment, authorizeLearner, authorizeSource, courseFor, hashPassword, login, readSession, sessionLearner, signSession, signup, verifyPassword,
 } from "../src/auth";
 import { AppError } from "../src/errors";
 import { listLearners } from "../src/learners";
@@ -67,5 +67,30 @@ describe("auth: accounts against the DB", () => {
     } finally {
       await prisma.assessment.delete({ where: { id: quiz.id } });
     }
+  });
+});
+
+describe("course privacy: each account has its own course", () => {
+  it("signed in → own course (created once); another account's course or source → 401; no session → shared demo course", async () => {
+    const a = await signup({ name: `${NAME} privA`, password: "password-1" });
+    const b = await signup({ name: `${NAME} privB`, password: "password-1" });
+    const [ca, ca2, cb] = await Promise.all([courseFor(a.id), courseFor(a.id), courseFor(b.id)]);
+    assert.equal(ca, ca2, "one course per account, even for concurrent first requests");
+    assert.notEqual(ca, cb);
+    assert.equal(await courseFor(null), "demo-course");
+    await assert.rejects(courseFor(b.id, ca), (e) => code(e) === "unauthorized");
+    await assert.rejects(courseFor(null, ca), (e) => code(e) === "unauthorized");
+    await assert.rejects(courseFor(a.id, "demo-course"), (e) => code(e) === "unauthorized");
+    assert.equal(await courseFor(a.id, ca), ca);
+
+    const src = await prisma.source.create({ data: { courseId: ca, type: "PDF", filename: `${NAME}.pdf`, mimeType: "application/pdf", sizeBytes: 1, path: "data/uploads/none.pdf", status: "PENDING" } });
+    await authorizeSource(src.id, a.id);
+    await assert.rejects(authorizeSource(src.id, b.id), (e) => code(e) === "unauthorized");
+    await assert.rejects(authorizeSource(src.id, null), (e) => code(e) === "unauthorized");
+    await authorizeSource("no-such-source", b.id); // the service reports its own 404
+    // Deleting the account deletes its course and everything in it.
+    await prisma.learner.delete({ where: { id: a.id } });
+    assert.equal(await prisma.course.count({ where: { id: ca } }), 0);
+    assert.equal(await prisma.source.count({ where: { id: src.id } }), 0);
   });
 });

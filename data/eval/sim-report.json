@@ -1,0 +1,121 @@
+{
+  "ranAt": "2026-10-14T20:17:36.914Z",
+  "params": {
+    "sessions": 3,
+    "questionsPerSession": 10,
+    "studentsPerProfile": 500,
+    "itemsPerTopic": 6,
+    "simulatedStudent": {
+      "learnWithPrereqs": 0.3,
+      "learnWithoutPrereqs": 0.08,
+      "slip": 0.08,
+      "slipPerDifficulty": 0.04,
+      "guess": {
+        "MCQ": 0.3,
+        "SHORT": 0.05,
+        "NUMERIC": 0.02
+      }
+    },
+    "appModel": {
+      "prior": 0.3,
+      "learn": 0.15,
+      "slip": 0.1,
+      "guess": {
+        "MCQ": 0.25,
+        "SHORT": 0.1,
+        "NUMERIC": 0.05
+      }
+    }
+  },
+  "topics": [
+    "Fundamentals of Process Scheduling",
+    "Process Execution and Bursts",
+    "Schedulers and Dispatchers",
+    "Scheduling Performance Metrics",
+    "Scheduling Algorithms and Policies"
+  ],
+  "rows": [
+    {
+      "profile": "novice (knows nothing)",
+      "policy": "adaptive",
+      "gain": 0.7284000000000008,
+      "gainSd": 0.270838402003852,
+      "maeFirst": 0.3122433329605715,
+      "maeLast": 0.18869844737580838,
+      "repetition": 0
+    },
+    {
+      "profile": "novice (knows nothing)",
+      "policy": "random",
+      "gain": 0.6420000000000008,
+      "gainSd": 0.24214871463627513,
+      "maeFirst": 0.3240736842566959,
+      "maeLast": 0.20798819295978216,
+      "repetition": 0.3000666666666665
+    },
+    {
+      "profile": "basics only (first 2 topics)",
+      "policy": "adaptive",
+      "gain": 0.48239999999999755,
+      "gainSd": 0.17091003481364053,
+      "maeFirst": 0.236989829254303,
+      "maeLast": 0.10734624758039134,
+      "repetition": 0
+    },
+    {
+      "profile": "basics only (first 2 topics)",
+      "policy": "random",
+      "gain": 0.40839999999999926,
+      "gainSd": 0.1833287757009241,
+      "maeFirst": 0.26637908224507356,
+      "maeLast": 0.142211891196456,
+      "repetition": 0.29753333333333337
+    },
+    {
+      "profile": "prerequisite gap (all but topic 2)",
+      "policy": "adaptive",
+      "gain": 0.17240000000000136,
+      "gainSd": 0.06897999710060873,
+      "maeFirst": 0.1667575395459256,
+      "maeLast": 0.03927298307317984,
+      "repetition": 0
+    },
+    {
+      "profile": "prerequisite gap (all but topic 2)",
+      "policy": "random",
+      "gain": 0.17240000000000136,
+      "gainSd": 0.06897999710060874,
+      "maeFirst": 0.2362695644753629,
+      "maeLast": 0.04890721197870591,
+      "repetition": 0.30039999999999994
+    },
+    {
+      "profile": "almost there (all but the last)",
+      "policy": "adaptive",
+      "gain": 0.16960000000000133,
+      "gainSd": 0.07180417815141375,
+      "maeFirst": 0.151878450723769,
+      "maeLast": 0.03700141234666583,
+      "repetition": 0
+    },
+    {
+      "profile": "almost there (all but the last)",
+      "policy": "random",
+      "gain": 0.16200000000000123,
+      "gainSd": 0.07846018098373216,
+      "maeFirst": 0.22947845539441442,
+      "maeLast": 0.05460969420645902,
+      "repetition": 0.2952666666666663
+    }
+  ],
+  "overall": {
+    "adaptive": {
+      "gain": 0.38820000000002275,
+      "repetition": 0
+    },
+    "random": {
+      "gain": 0.34620000000001916,
+      "repetition": 0.2983166666666659
+    }
+  }
+}

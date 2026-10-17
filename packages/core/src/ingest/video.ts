@@ -7,7 +7,6 @@
 import { z } from "zod";
 import { sha256, writeCache } from "../cache";
 import { cachedGenerateJson, deleteFile, generateCacheKey, generateJson, modelFor, uploadFile, type UploadedFile } from "../llm";
-import { heuristicQuality } from "./pdf";
 import type { ChunkDraft, IngestStats } from "./types";
 
 /** Bump when the schema or windowing changes. (Prompt text changes miss the cache automatically: its hash is in the key.) */
@@ -113,23 +112,17 @@ export function mergeAtEdges(segments: RawSegment[], edges: number[]): { segment
 /** One TRANSCRIPT chunk per segment (decision Q11: transcript + on-screen content). */
 export function segmentChunks(segments: RawSegment[]): ChunkDraft[] {
   return segments.map((s) => {
-    const title = s.title.trim() || null;
     const transcript = s.transcript.trim();
     const onScreen = s.onScreen.trim();
-    const content = [transcript, onScreen && `[On screen] ${onScreen}`].filter(Boolean).join("\n");
-    const conceptLabels = [...new Set(s.conceptLabels.map((l) => l.trim()).filter(Boolean))].slice(0, 4);
     return {
       kind: "TRANSCRIPT",
-      title,
-      content,
+      title: s.title.trim() || null,
+      content: [transcript, onScreen && `[On screen] ${onScreen}`].filter(Boolean).join("\n"),
       page: null,
       slide: null,
       tStart: s.tStart,
       tEnd: s.tEnd,
-      conceptLabels,
-      section: title,
-      language: "en",
-      qualityScore: heuristicQuality(content, conceptLabels),
+      conceptLabels: [...new Set(s.conceptLabels.map((l) => l.trim()).filter(Boolean))].slice(0, 4),
     };
   });
 }
@@ -138,6 +131,13 @@ export function segmentChunks(segments: RawSegment[]): ChunkDraft[] {
 export const MIN_WINDOW_COVERAGE = 0.6;
 
 export type GeminiFileHandle = { name: string; uri: string; expiresAt: Date | null };
+
+/**
+ * Which key uploaded each Files API file (in this process). A file is readable only by its uploader's
+ * project, so every window call is pinned to that key; a handle whose uploader is unknown (e.g. after a
+ * restart) is re-uploaded rather than guessed.
+ */
+const uploaderOf = new Map<string, number>();
 
 export async function extractVideo(opts: {
   courseName: string;
@@ -161,10 +161,19 @@ export async function extractVideo(opts: {
   const missing = windows.map((w, i) => (results[i] ? null : i)).filter((i): i is number => i !== null);
 
   let file: GeminiFileHandle | null = null;
+  let fileKey: number | undefined;
   if (missing.length) {
-    const reusable = opts.existingFile && (!opts.existingFile.expiresAt || opts.existingFile.expiresAt.getTime() > Date.now() + 10 * 60_000);
-    file = reusable ? opts.existingFile : await uploadFile(opts.absPath, "video/mp4");
-    if (!reusable) await opts.onUploaded(file as UploadedFile);
+    const prior = opts.existingFile;
+    const reusable = prior && uploaderOf.has(prior.name) && (!prior.expiresAt || prior.expiresAt.getTime() > Date.now() + 10 * 60_000);
+    if (reusable) {
+      file = prior;
+      fileKey = uploaderOf.get(prior.name);
+    } else {
+      const up = await uploadFile(opts.absPath, "video/mp4");
+      uploaderOf.set(up.name, up.keyIndex);
+      [file, fileKey] = [up, up.keyIndex];
+      await opts.onUploaded(up);
+    }
   }
   await opts.onStep(); // step 1: upload (or nothing to upload)
 
@@ -184,6 +193,7 @@ export async function extractVideo(opts: {
         { text: `You are given only a clip of the video: from ${from} s to ${to} s (${(to - from).toFixed(1)} s long). Give tStart and tEnd in seconds relative to the start of this clip (0 = its first frame). Segment all of the clip.` },
       ],
       estimatedInputTokens: Math.ceil((to - from) * VIDEO_TOKENS_PER_SECOND * 1.3) + 1_000,
+      keyIndex: fileKey, // only the uploader's project can read the file
     });
     stats.geminiCalls++;
     stats.inputTokens += r.usage.inputTokens;
@@ -200,7 +210,8 @@ export async function extractVideo(opts: {
   }
 
   if (file) {
-    await deleteFile(file.name).catch(() => {}); // all windows cached; the remote copy is no longer needed
+    await deleteFile(file.name, fileKey).catch(() => {}); // all windows cached; the remote copy is no longer needed
+    uploaderOf.delete(file.name);
     await opts.onUploaded(null);
   }
 

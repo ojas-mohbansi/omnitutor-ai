@@ -13,6 +13,7 @@ import { badRequest, notFound, notReady } from "./errors";
 import { generateJson } from "./llm";
 import { NUMERIC_TOLERANCE } from "./quiz";
 import { toCitation } from "./retrieve";
+import { stripExcerptRefs } from "./text";
 
 /** A SHORT answer passes at this fraction of its key points. */
 export const SHORT_PASS = 0.6;
@@ -135,7 +136,7 @@ export async function submitQuiz(assessmentId: string, req: SubmitRequest): Prom
     const response = responseOf.get(q.id) ?? null;
     const ans = q.answer as Answer;
     const options = q.type === "MCQ" ? (q.options as string[]) : null;
-    const key = correctAnswerText(q.type, options, ans);
+    const key = stripExcerptRefs(correctAnswerText(q.type, options, ans));
     let correct: boolean;
     let score: number;
     let misconception: string | null = null;
@@ -158,7 +159,8 @@ export async function submitQuiz(assessmentId: string, req: SubmitRequest): Prom
           ? `Correct. ${q.explanation}`
           : `Not quite: the answer is ${key}.${misconception ? ` Your choice suggests: ${misconception}.` : ""} ${q.explanation}`;
     }
-    const feedback = { text: feedbackText.trim(), citations: citationsFor(q.sourceChunkIds) };
+    // Questions stored before excerpt ids were stripped at generation time are cleaned here too.
+    const feedback = { text: stripExcerptRefs(feedbackText.trim()), citations: citationsFor(q.sourceChunkIds) };
     const attempt = await prisma.attempt.create({
       data: { assessmentId: a.id, questionId: q.id, response: response ?? Prisma.JsonNull, correct, score, feedback, misconception },
     });
@@ -210,5 +212,10 @@ export async function getReport(assessmentId: string): Promise<QuizReport> {
   const a = await prisma.assessment.findUnique({ where: { id: assessmentId }, select: { status: true, report: true } });
   if (!a) throw notFound(`Quiz "${assessmentId}" not found.`);
   if (a.status !== "SUBMITTED" || !a.report) throw notReady("This quiz hasn't been submitted yet.");
-  return a.report as QuizReport;
+  // Reports stored before excerpt ids were stripped are cleaned on read.
+  const report = a.report as QuizReport;
+  return {
+    ...report,
+    attempts: report.attempts.map((x) => ({ ...x, correctAnswer: stripExcerptRefs(x.correctAnswer), feedback: { ...x.feedback, text: stripExcerptRefs(x.feedback.text) } })),
+  };
 }

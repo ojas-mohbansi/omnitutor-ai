@@ -18,3 +18,7 @@ export * from "./quiz";
 export * from "./grading";
 export * from "./mastery";
 export * from "./auth";
+export * from "./profile";
+export * from "./notebooks";
+export * from "./evalReports";
+export * from "./flashcards";

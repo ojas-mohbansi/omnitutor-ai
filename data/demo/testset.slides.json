@@ -1,0 +1,81 @@
+[
+  {
+    "id": "sl-why-switch",
+    "question": "Why does an operating system switch the CPU between processes at all?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "Process scheduling is the foundation of multiprogramming: by switching the CPU among processes the OS keeps the processor productive, which increases CPU utilization. Source: synthetic deck slide 2 (same fact on PDF page 2).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 2 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 2 }
+    ]
+  },
+  {
+    "id": "sl-last-burst",
+    "question": "What kind of burst does a process's execution end with?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "A CPU burst: execution alternates between CPU bursts and I/O waits, and the final burst is a CPU burst. Source: synthetic deck slide 3 (alternation also on PDF page 3).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 3 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 3 }
+    ]
+  },
+  {
+    "id": "sl-who-picks",
+    "question": "Which component chooses the next process to run, and where does it choose it from?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "The short-term scheduler selects a process from the ready queue; the selected process then gets the CPU. Source: synthetic deck slide 5 (short-term scheduler also named on PDF page 6).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 5 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 6 }
+    ]
+  },
+  {
+    "id": "sl-handover-steps",
+    "question": "List what happens when control of the CPU is handed to the process the scheduler picked.",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "The dispatcher performs a context switch, switches to user mode, and jumps to the correct location in the user program to resume it. Source: synthetic deck slide 6 (same steps on PDF page 6).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 6 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 6 }
+    ]
+  },
+  {
+    "id": "sl-throughput",
+    "question": "What does the throughput criterion measure?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "Throughput is the number of processes that complete their execution per unit of time. Source: synthetic deck slide 8 (also PDF page 7).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 8 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 7 }
+    ]
+  },
+  {
+    "id": "sl-response-formula",
+    "question": "A process arrives at time 3 and first gets the CPU at time 10. Using the course's formula, what is its response time?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "Response time = time the process first gets the CPU − arrival time = 10 − 3 = 7 time units. Source: synthetic deck slide 9 (formula also on PDF page 8).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 9 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 8 }
+    ]
+  },
+  {
+    "id": "sl-scheduler-vs-dispatcher",
+    "question": "In one sentence, how do the scheduler and the dispatcher split the work?",
+    "modality": "pptx",
+    "needsFigure": false,
+    "groundTruth": "The scheduler selects which process runs next; the dispatcher hands control of the CPU over to that process. Source: synthetic deck slide 10 (roles on slides 5–6 and PDF page 6).",
+    "expected": [
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 10 },
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 5 },
+      { "sourceType": "PPTX", "filename": "process-scheduling-10slides.pptx", "slide": 6 },
+      { "sourceType": "PDF", "filename": "process-scheduling-9pages.pdf", "page": 6 }
+    ]
+  }
+]

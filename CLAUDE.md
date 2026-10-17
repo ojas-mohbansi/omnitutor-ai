@@ -131,6 +131,12 @@ OS CPU scheduling: 1 NPTEL/OCW lecture (15–20 min), 1 textbook chapter (20–3
 - [x] Subtopics: per-topic cited concepts from ingestion labels in `GET /api/topics`
 - [x] Module 16: accounts (`/api/auth/signup|login|logout|session`, scrypt + HMAC session cookie); learner routes return 401 unless the session owns the learner (passwordless learners from tools/tests stay open). UI: /login, header account control, sign-in gate on tutor/quiz/dashboard
 - [x] Codebase audit (docs/PROGRESS.md §4 "Codebase audit"): Gemini request timeout, rejected-key rotation, atomic quiz submit, no orphan chat turns, re-ingest keeps topic tags, lint clean; docs reconciled (ARCHITECTURE §0 deviations, banners on teammate design notes). 270 unit + 35 e2e, real-browser flow 8/8, build clean
+- [x] Module 17: onboarding profile (tone → temperature, style, level, goal) personalises the tutor; tutor prompt v2 teaches (cited explanations + labelled outside examples); clean declines
+- [x] Module 18: notebooks (many private courses per account; active one drives every course-scoped route); first notebook "My first notebook"
+- [x] Module 19: evaluation page (/evaluation, GET /api/eval/report; reports in data/eval/; judge = LLM_MODEL_VERIFY; 58-question test set incl. slides). Latest: faithfulness 0.95, citation accuracy 1.00, 0/37 false declines, 17/21 declined + 4 flagged
+- [x] Module 20: course map (/map, radial mind map from topics/concepts/mastery; no new API)
+- [x] Module 21: flashcards (generate → code checks → second-model verify; Leitner review; FLASHCARD mastery evidence)
+- [x] UI pass: client site header (active page, account menu, mobile menu), study hub on the home page, skeleton loaders, page transitions
 - [ ] Next: demo video, Devpost (docs/SUBMISSION.md)
 - Real-data checks (spend quota only when inputs or prompts change; cached otherwise): `npm run stage1:pdf`, `npm run stage1:video`, `npm run stage1:retrieval`, `npm run holdout:retrieval`, `npm run holdout:generalize`, `npm run stage1:pptx`, `npm run stage1:build`, `npm run stage1:tutor`, `npm run stage1:quiz`, `npm run stage1:grading`, `npm run stage1:mastery`
 - [ ] Everything else

@@ -96,24 +96,6 @@ describe("slideChunk (pure)", () => {
     assert.equal(slideChunk(slide(5, { omitted: ["unsupported format (.emf)"] }))!.content, "Text 5\n\n[Figure omitted: unsupported format (.emf)]");
     assert.equal(slideChunk(slide(6, { title: null, text: "", omitted: ["unsupported format (.wmf)"] })), null);
   });
-  it("new fields: section=title, language='en', qualityScore in [0,1]", () => {
-    const c = slideChunk(slide(3))!;
-    assert.equal(c.section, "Slide 3");  // section === title when title is non-null
-    assert.equal(c.language, "en");
-    assert.ok(c.qualityScore !== null && c.qualityScore >= 0 && c.qualityScore <= 1);
-
-    // Slide with null title → section = null
-    const c2 = slideChunk(slide(5, { title: null, text: "Some text here" }))!;
-    assert.equal(c2.section, null);
-    assert.equal(c2.language, "en");
-  });
-  it("section passthrough property: section === title for all non-null titles", () => {
-    const titles = ["CPU Scheduling", "Round Robin", "MLFQ", "  Leading space  ", "x".repeat(120)];
-    for (const title of titles) {
-      const c = slideChunk(slide(1, { title }))!;
-      assert.equal(c.section, title, `section should equal title "${title}"`);
-    }
-  });
 });
 
 describe("extractPptx (fake Gemini)", () => {

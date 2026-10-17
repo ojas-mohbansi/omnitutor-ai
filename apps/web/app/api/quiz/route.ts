@@ -1,4 +1,4 @@
-import { authorizeLearner, createQuiz } from "@sc/core";
+import { authorizeLearner, courseFor, createQuiz } from "@sc/core";
 import { endpoints } from "@sc/schemas";
 import { handle, json, readBody, sessionOf } from "../_lib/http";
 
@@ -6,5 +6,5 @@ import { handle, json, readBody, sessionOf } from "../_lib/http";
 export const POST = handle(async (req) => {
   const body = await readBody(req, endpoints.createQuiz.request);
   await authorizeLearner(body.learnerId, sessionOf(req));
-  return json(endpoints.createQuiz.response, await createQuiz(body));
+  return json(endpoints.createQuiz.response, await createQuiz({ ...body, courseId: await courseFor(sessionOf(req), body.courseId) }));
 });

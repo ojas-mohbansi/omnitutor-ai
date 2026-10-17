@@ -4,7 +4,11 @@ import {
   SourceView, TopicView, UploadQuery, UploadResponse,
 } from "./course";
 import { Credentials, SessionView } from "./auth";
+import { CreateNotebookRequest, NotebookList, SelectNotebookRequest } from "./notebooks";
+import { FlashcardDeck, FlashcardQuery, GenerateFlashcardsRequest, GenerateFlashcardsResult, ReviewFlashcardRequest, ReviewFlashcardResult } from "./flashcards";
+import { LearnerProfile, ProfileView } from "./profile";
 import { EvalAnswerRequest, EvalAnswerResponse } from "./eval";
+import { EvalReportView } from "./evalReport";
 import { MasteryView } from "./mastery";
 import { CreateQuizRequest, Quiz, QuizReport, SubmitRequest } from "./quiz";
 import { SearchRequest, SearchResponse } from "./search";
@@ -38,6 +42,15 @@ export const endpoints = {
   login: { method: "POST", path: "/api/auth/login", query: null, request: Credentials, response: Learner, status: "live", module: 16 },
   logout: { method: "POST", path: "/api/auth/logout", query: null, request: null, response: SessionView, status: "live", module: 16 },
   session: { method: "GET", path: "/api/auth/session", query: null, request: null, response: SessionView, status: "live", module: 16 },
+  getProfile: { method: "GET", path: "/api/profile", query: null, request: null, response: ProfileView, status: "live", module: 17 },
+  saveProfile: { method: "POST", path: "/api/profile", query: null, request: LearnerProfile, response: ProfileView, status: "live", module: 17 },
+  listNotebooks: { method: "GET", path: "/api/notebooks", query: null, request: null, response: NotebookList, status: "live", module: 18 },
+  createNotebook: { method: "POST", path: "/api/notebooks", query: null, request: CreateNotebookRequest, response: NotebookList, status: "live", module: 18 },
+  selectNotebook: { method: "POST", path: "/api/notebooks/active", query: null, request: SelectNotebookRequest, response: NotebookList, status: "live", module: 18 },
+  deleteNotebook: { method: "DELETE", path: "/api/notebooks/[id]", query: null, request: null, response: NotebookList, status: "live", module: 18 },
+  listFlashcards: { method: "GET", path: "/api/flashcards", query: FlashcardQuery, request: null, response: FlashcardDeck, status: "live", module: 21 },
+  generateFlashcards: { method: "POST", path: "/api/flashcards/generate", query: null, request: GenerateFlashcardsRequest, response: GenerateFlashcardsResult, status: "live", module: 21 },
+  reviewFlashcard: { method: "POST", path: "/api/flashcards/[id]/review", query: null, request: ReviewFlashcardRequest, response: ReviewFlashcardResult, status: "live", module: 21 },
   listSources: { method: "GET", path: "/api/sources", query: null, request: null, response: z.array(SourceView), status: "live", module: 4 },
   uploadSource: { method: "POST", path: "/api/sources", query: UploadQuery, request: "binary", response: UploadResponse, status: "live", module: 4 },
   deleteSource: { method: "DELETE", path: "/api/sources/[id]", query: null, request: null, response: DeleteSourceResponse, status: "live", module: 4 },
@@ -48,6 +61,7 @@ export const endpoints = {
   chat: { method: "POST", path: "/api/chat", query: null, request: ChatRequest, response: TutorAnswer, status: "live", module: 10 },
   chatHistory: { method: "GET", path: "/api/chat", query: LearnerQuery, request: null, response: z.array(ChatMessageView), status: "live", module: 10 },
   evalAnswer: { method: "POST", path: "/api/eval/answer", query: null, request: EvalAnswerRequest, response: EvalAnswerResponse, status: "live", module: 10 },
+  evalReport: { method: "GET", path: "/api/eval/report", query: null, request: null, response: EvalReportView, status: "live", module: 19 },
   createQuiz: { method: "POST", path: "/api/quiz", query: null, request: CreateQuizRequest, response: Quiz, status: "live", module: 12 },
   getQuiz: { method: "GET", path: "/api/quiz/[id]", query: null, request: null, response: Quiz, status: "live", module: 12 },
   submitQuiz: { method: "POST", path: "/api/quiz/[id]/submit", query: null, request: SubmitRequest, response: QuizReport, status: "live", module: 13 },
